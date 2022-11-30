@@ -8,9 +8,6 @@ import (
 )
 
 func main() {
-	// ENV 파일을 불러오는 부분, DB 설정 등
-	// DB Thread 7개 생성
-	// Kafka Consumer Thread 생성
 	config := app.GetConfig("config.yml")
 	ch := app.ChannelStruct{}
 	ch.ChannelInit()
@@ -52,9 +49,4 @@ func main() {
 			fmt.Println(con)
 		}
 	}
-
-	// for _, d := range db_handler {
-	// 	d.DBClose()
-	// }
-
 }

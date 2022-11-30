@@ -167,25 +167,21 @@ func (d *DBHandler) DemoHostSetting(arr *data.AgentinfoArr) {
 }
 
 func (d *DBHandler) DemoHostStateChange(agent_str string) {
-	// connected=0인 agent를 1로 초기화
 	tx := d.db.MustBegin()
 	timestamp := time.Now().Unix()
-	fmt.Printf("%s %v %d before\n", d.name, d.db, time.Now().UnixMicro())
 
+	// connected=0인 agent를 1로 초기화
 	tx.MustExec(data.DemoUpdateAgentinfoReset, timestamp)
 	tx.MustExec(fmt.Sprintf(data.DemoUpdateAgentinfoState, 0, timestamp, agent_str, 1, timestamp))
 	tx.Commit()
-	fmt.Printf("%s %v %d after\n", d.name, d.db, time.Now().UnixMicro())
 }
 
 func (d *DBHandler) DemoBptUpdate(arr *data.LastrealtimeperfArr) {
 	tx := d.db.MustBegin()
 	tx.MustExec(data.DeleteLastrealtimeperf)
-	// fmt.Printf("%s %d before\n", d.name, time.Now().UnixMicro())
 
 	tx.MustExec(data.DemoInsertLastrealtimeperf, arr.GetArgs()...)
 	tx.Commit()
-	// fmt.Printf("%s %d after\n", d.name, time.Now().UnixMicro())
 }
 
 func (d *DBHandler) DBClose() {
@@ -213,35 +209,3 @@ func DBInit(dbinfo DbInfo, info *data.AgentinfoArr) *DBHandler {
 
 	return d
 }
-
-// func DBProcessing(dbinfo DbInfo, ch ChannelStruct) {
-// 	d := &DBHandler{
-// 		name: dbinfo.Name,
-// 		db:   DBConnection(dbinfo),
-// 	}
-
-// 	d.CheckTable()
-// 	d.DemoHostSetting()
-
-// 	demo_ticker := time.NewTicker(time.Second * 1)
-// 	go func() {
-// 		for range demo_ticker.C {
-// 			one_agents, zero_agents := d.DemoHostStateChange()
-// 			fmt.Printf("%v\n%v\n", one_agents, zero_agents)
-// 		}
-// 	}()
-
-// 	go func() {
-// 		for range demo_ticker.C {
-// 			arr := d.DemoBptSetting()
-// 			d.DemoBptUpdate(arr)
-// 		}
-// 	}()
-
-// 	defer d.db.Close()
-
-// 	for {
-// 		received_data := <-ch.ConsumerData
-// 		fmt.Println(received_data)
-// 	}
-// }
