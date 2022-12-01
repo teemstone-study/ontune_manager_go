@@ -3,10 +3,7 @@ package app
 import (
 	"encoding/json"
 	"manager/data"
-	"sync"
 )
-
-var wg sync.WaitGroup
 
 func ConsumerHost(cshost chan<- *data.AgentHostAgentInfo, config SettingKafka, plist []int32) {
 	for {
