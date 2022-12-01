@@ -42,6 +42,10 @@ database:
     username: ontune
     password: ontune
 
+kafka:
+  host: 192.168.0.140
+  port: 9093
+  
 demo:
   host_count: 4000
   host_change_count: 500

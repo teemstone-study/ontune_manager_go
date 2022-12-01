@@ -1,8 +1,12 @@
 package data
 
-type HostAgentInfo struct {
+import (
+	"time"
+)
+
+type AgentHostAgentInfo struct {
 	AgentName    string
-	AgentID      int
+	AgentID      string
 	Model        string
 	Serial       string
 	Ip           string
@@ -14,9 +18,9 @@ type HostAgentInfo struct {
 	SwapMemory   int
 }
 
-type RealTimePerf struct {
+type AgentRealTimePerf struct {
 	AgentID          string
-	Agenttime        int64
+	Agenttime        time.Time
 	User             int
 	Sys              int
 	Wait             int
@@ -74,9 +78,13 @@ type RealTimePerf struct {
 	DUSM             int
 }
 
-type RealTimePID struct {
-	AgentID    string
-	Agenttime  int64
+type AgentRealTimePID struct {
+	AgentID   string
+	Agenttime time.Time
+	PerfList  []AgentRealTimePIDInner
+}
+
+type AgentRealTimePIDInner struct {
 	Pid        int
 	Ppid       int
 	Uid        int
@@ -98,9 +106,13 @@ type RealTimePID struct {
 	Pgpool     int
 }
 
-type RealTimeDisk struct {
-	AgentID      string
-	Agenttime    int64
+type AgentRealTimeDisk struct {
+	AgentID   string
+	Agenttime time.Time
+	PerfList  []AgentRealTimeDiskInner
+}
+
+type AgentRealTimeDiskInner struct {
 	Ioname       string
 	Readrate     int
 	Writerate    int
@@ -111,9 +123,13 @@ type RealTimeDisk struct {
 	Writesvctime int
 }
 
-type RealTimeNet struct {
+type AgentRealTimeNet struct {
 	AgentID   string
-	Agenttime int64
+	Agenttime time.Time
+	PerfList  []AgentRealTimeNetInner
+}
+
+type AgentRealTimeNetInner struct {
 	Ioname    string
 	Readrate  int
 	Writerate int

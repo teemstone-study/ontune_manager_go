@@ -16,6 +16,11 @@ type DbInfo struct {
 	Password string `yaml:"password"`
 }
 
+type KafkaInfo struct {
+	Host string `yaml:"host"`
+	Port string `yaml:"port"`
+}
+
 type DemoInfo struct {
 	HostCount       int `yaml:"host_count"`
 	HostChangeCount int `yaml:"host_change_count"`
@@ -24,8 +29,9 @@ type DemoInfo struct {
 }
 
 type Config struct {
-	Database []DbInfo `yaml:"database"`
-	Demo     DemoInfo `yaml:"demo"`
+	Database  []DbInfo  `yaml:"database"`
+	KafkaInfo KafkaInfo `yaml:"kafka"`
+	Demo      DemoInfo  `yaml:"demo"`
 }
 
 func (d DbInfo) Datasource() string {
