@@ -388,8 +388,8 @@ var InsertTableinfo = `
 INSERT INTO tableinfo values ($1, 0, $2, $2, 0);
 `
 
-var DeleteAgentinfo = `
-DELETE FROM agentinfo;
+var DeleteAgentinfoDummy = `
+DELETE FROM agentinfo where _hostname like 'Dummy%';
 `
 
 var DeleteLastrealtimeperf = `
@@ -405,17 +405,6 @@ var DemoInsertAgentinfoPostfix = `
  null, 'localhost', null, null, null, 1, 0, 0, 1, 0, null, %d, 0, 0,
  'Windows 11 Home', 'Unknown', 'V4', null, null, 1, 3200, 4095, 0, -1, 0, 0,
  0, 0, 0, 1, 0, 0, 0, 'localhost', 0, 0)
-`
-
-var DemoInsertAgentinfoUnnest = `
-INSERT INTO agentinfo 
-(select * from unnest($1::int[], $2::text[], $3::text[], $4::int[], $5::int[], $6::int[],
-	$7::int[], $8::int[], $9::int[], $10::int[], $11::int[], $12::int[], $13::int[], $14::int[], 
-	$15::text[], $16::text[], $17::text[], $18::text[], $19::text[], 
-	$20::int[], $21::int[], $22::int[], $23::int[], $24::int[],
-	$25::text[], $26::int[], $27::int[], $28::int[], $29::text[], $30::text[], $31::text[], $32::text[], $33::text[], 
-	$34::int[], $35::int[], $36::int[], $37::int[], $38::int[], $39::int[], $40::int[], $41::int[], 
-	$42::int[], $43::int[], $44::int[], $45::int[], $46::int[], $47::int[], $48::text[], $49::int[], $50::int[]))
 `
 
 var DemoUpdateAgentinfoState = `
@@ -443,4 +432,23 @@ INSERT INTO lastrealtimeperf
 	$37::int[], $38::int[], $39::int[], $40::int[], $41::int[], $42::int[], $43::int[], $44::int[],
 	$45::int[], $46::int[], $47::int[], $48::int[], $49::int[], $50::int[], $51::int[], $52::int[],
 	$53::int[], $54::int[], $55::int[], $56::int[], $57::int[], $58::int[]))
+`
+
+var InsertAgentinfoUnnest = `
+INSERT INTO agentinfo 
+(select * from unnest($1::int[], $2::text[], $3::text[], $4::int[], $5::int[], $6::int[],
+	$7::int[], $8::int[], $9::int[], $10::int[], $11::int[], $12::int[], $13::int[], $14::int[], 
+	$15::text[], $16::text[], $17::text[], $18::text[], $19::text[], 
+	$20::int[], $21::int[], $22::int[], $23::int[], $24::int[],
+	$25::text[], $26::int[], $27::int[], $28::int[], $29::text[], $30::text[], $31::text[], $32::text[], $33::text[], 
+	$34::int[], $35::int[], $36::int[], $37::int[], $38::int[], $39::int[], $40::int[], $41::int[], 
+	$42::int[], $43::int[], $44::int[], $45::int[], $46::int[], $47::int[], $48::text[], $49::int[], $50::int[]))
+`
+
+var UpdateAgentinfo = `
+UPDATE agentinfo
+   SET _hostnameext=$1, _ipaddress=$2, _allip=$2, _model=$3, _serial=$4,
+       _os=$5, _agentversion=$6, _processorcount=$7, _processorclock=$8,
+	   _memorysize=$9, _swapsize=$10, _updatedtime=$11
+ WHERE _hostname=$12
 `

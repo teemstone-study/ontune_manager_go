@@ -79,7 +79,7 @@ func KafkaConsumerControllerInit(configValue *SettingKafka, topicName string) sa
 }
 
 func KafkaConsumerControllerGetPartitionConsumer(configValue *SettingKafka, setconsumer sarama.Consumer, topicName string, partitionNum int32) sarama.PartitionConsumer {
-	partConsumer, err := setconsumer.ConsumePartition(topicName, partitionNum, sarama.OffsetNewest)
+	partConsumer, err := setconsumer.ConsumePartition(topicName, partitionNum, sarama.OffsetOldest)
 	if err != nil {
 		panic(err)
 	}

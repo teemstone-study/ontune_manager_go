@@ -2,11 +2,14 @@ package app
 
 import (
 	"encoding/json"
+	"fmt"
 	"manager/data"
+	"time"
 )
 
 func ConsumerHost(cshost chan<- *data.AgentHostAgentInfo, config SettingKafka, plist []int32) {
 	for {
+		fmt.Printf("host before %d", time.Now().UnixMicro())
 		for cdata := range plist {
 			consumer := KafkaConsumerControllerInit(&config, "host")
 			cPartition := KafkaConsumerControllerGetPartitionConsumer(&config, consumer, "host", int32(cdata))
@@ -15,6 +18,7 @@ func ConsumerHost(cshost chan<- *data.AgentHostAgentInfo, config SettingKafka, p
 			json.Unmarshal(msg.Value, &agenthostinfo)
 			cshost <- &agenthostinfo
 		}
+		fmt.Printf("host after %d", time.Now().UnixMicro())
 	}
 }
 

@@ -1,9 +1,7 @@
 package app
 
 import (
-	"log"
 	"manager/data"
-	"net"
 )
 
 type ChannelStruct struct {
@@ -22,6 +20,42 @@ type ConsumerStruct struct {
 	Realtimenet  chan *data.AgentRealTimeNet
 }
 
+const (
+	DATAKEY_CODE  = 0x00000001
+	HOST_CODE     = 0x00000002
+	LASTPERF_CODE = 0x00000003
+	BASIC_CODE    = 0x00000004
+	CPU_CODE      = 0x00000005
+	MEM_CODE      = 0x00000006
+	NET_CODE      = 0x00000007
+	DISK_CODE     = 0x00000008
+)
+
+const (
+	HOST_KEY     = 1
+	LASTPERF_KEY = 2
+	BASIC_KEY    = 4
+	CPU_KEY      = 8
+	MEM_KEY      = 16
+	NET_KEY      = 32
+	DISK_KEY     = 64
+)
+
+type DataKey struct {
+	Code uint32  `json:"code"`
+	Key  Bitmask `json:"key"`
+}
+
+type DataCode struct {
+	Code uint32 `json:"code"`
+}
+
+type Bitmask uint32
+
+func (value Bitmask) IsSet(key Bitmask) bool {
+	return value&key != 0
+}
+
 func (c *ChannelStruct) ChannelInit() {
 	c.ConsumerData = ConsumerStruct{}
 	c.ConsumerData.ConsumerInit()
@@ -38,22 +72,4 @@ func (c *ConsumerStruct) ConsumerInit() {
 	c.Realtimepid = make(chan *data.AgentRealTimePID)
 	c.Realtimedisk = make(chan *data.AgentRealTimeDisk)
 	c.Realtimenet = make(chan *data.AgentRealTimeNet)
-}
-
-func TcpSend(data []byte) {
-	client, err := net.Dial("tcp", "localhost:8088")
-	if err != nil {
-		log.Println("TCP Connection Error")
-		return
-	}
-	defer client.Close()
-
-	func(c net.Conn) {
-		_, err := c.Write(data)
-		if err != nil {
-			log.Println(err)
-			return
-		}
-	}(client)
-
 }

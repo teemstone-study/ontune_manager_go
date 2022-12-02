@@ -1,6 +1,8 @@
 package data
 
 import (
+	"time"
+
 	"github.com/lib/pq"
 )
 
@@ -161,7 +163,7 @@ type RealtimeperfPg struct {
 	Exec             int   `db:"_exec"`
 	Interupt         int   `db:"_interupt"`
 	Systemcall       int   `db:"_systemcall"`
-	Constringswitch  int   `db:"_constringswitch"`
+	Contextswitch    int   `db:"_contextswitch"`
 	Semaphore        int   `db:"_semaphore"`
 	Msg              int   `db:"_msg"`
 	Diskreadwrite    int   `db:"_diskreadwrite"`
@@ -188,66 +190,192 @@ type RealtimeperfPg struct {
 	Dusm             int   `db:"_dusm"`
 }
 
+func (r *RealtimeperfPg) SetData(data interface{}) {
+	d := data.(*AgentRealTimePerf)
+	r.Ontunetime = d.Agenttime.Unix()
+	r.Agenttime = int(d.Agenttime.Unix())
+	r.Agentid = 0
+	r.User = d.User
+	r.Sys = d.Sys
+	r.Wait = d.Wait
+	r.Idle = d.Idle
+	r.Processorcount = d.ProcessorCount
+	r.Runqueue = d.RunQueue
+	r.Blockqueue = d.BlockQueue
+	r.Waitqueue = d.WaitQueue
+	r.Pqueue = d.PQueue
+	r.Pcrateuser = d.PCRateUser
+	r.Pcratesys = d.PCRateSys
+	r.Memorysize = d.MemorySize
+	r.Memoryused = d.MemoryUsed
+	r.Memorypinned = d.MemoryPinned
+	r.Memorysys = d.MemorySys
+	r.Memoryuser = d.MemoryUser
+	r.Memorycache = d.MemoryCache
+	r.Avm = d.Avm
+	r.Pagingspacein = d.PagingspaceIn
+	r.Pagingspaceout = d.PaingSpaceOut
+	r.Filesystemin = d.FileSystemIn
+	r.Filesystemout = d.FileSystmeOut
+	r.Memoryscan = d.MemoryScan
+	r.Memoryfreed = d.MemoryFreed
+	r.Swapsize = d.SwapSize
+	r.Swapused = d.SwapUsed
+	r.Swapactive = d.SwapActive
+	r.Fork = d.Fork
+	r.Exec = d.Exec
+	r.Interupt = d.Interupt
+	r.Systemcall = d.SystemCall
+	r.Contextswitch = d.ContextSwitch
+	r.Semaphore = d.Semaphore
+	r.Msg = d.Msg
+	r.Diskreadwrite = d.DiskReadWrite
+	r.Diskiops = d.DiskIOPS
+	r.Networkreadwrite = d.NetworkReadWrite
+	r.Networkiops = 0
+	r.Topcommandid = d.TopCommandID
+	r.Topcommandcount = d.TopCommandCount
+	r.Topuserid = d.TopUserID
+	r.Topcpu = d.TopCPU
+	r.Topdiskid = d.TopDiskID
+	r.Topvgid = d.TopvgID
+	r.Topbusy = d.TOPBusy
+	r.Maxpid = d.MaxPID
+	r.Threadcount = d.ThreadCount
+	r.Pidcount = d.PIDCount
+	r.Linuxbuffer = d.LinuxBuffer
+	r.Linuxcached = d.LinuxCached
+	r.Linuxsrec = d.Linuxsrec
+	r.Memused_Mb = d.Memused_mb
+	r.Irq = d.IRQ
+	r.Softirq = d.SoftIRQ
+	r.Swapused_Mb = d.Swapused_MB
+	r.Dusm = d.DUSM
+}
+
 type RealtimeperfTs struct {
-	Ontunetime       int64 `db:"_ontunetime"`
-	Agenttime        int   `db:"_agenttime"`
-	Agentid          int   `db:"_agentid"`
-	User             int   `db:"_user"`
-	Sys              int   `db:"_sys"`
-	Wait             int   `db:"_wait"`
-	Idle             int   `db:"_idle"`
-	Processorcount   int   `db:"_processorcount"`
-	Runqueue         int   `db:"_runqueue"`
-	Blockqueue       int   `db:"_blockqueue"`
-	Waitqueue        int   `db:"_waitqueue"`
-	Pqueue           int   `db:"_pqueue"`
-	Pcrateuser       int   `db:"_pcrateuser"`
-	Pcratesys        int   `db:"_pcratesys"`
-	Memorysize       int   `db:"_memorysize"`
-	Memoryused       int   `db:"_memoryused"`
-	Memorypinned     int   `db:"_memorypinned"`
-	Memorysys        int   `db:"_memorysys"`
-	Memoryuser       int   `db:"_memoryuser"`
-	Memorycache      int   `db:"_memorycache"`
-	Avm              int   `db:"_avm"`
-	Pagingspacein    int   `db:"_pagingspacein"`
-	Pagingspaceout   int   `db:"_pagingspaceout"`
-	Filesystemin     int   `db:"_filesystemin"`
-	Filesystemout    int   `db:"_filesystemout"`
-	Memoryscan       int   `db:"_memoryscan"`
-	Memoryfreed      int   `db:"_memoryfreed"`
-	Swapsize         int   `db:"_swapsize"`
-	Swapused         int   `db:"_swapused"`
-	Swapactive       int   `db:"_swapactive"`
-	Fork             int   `db:"_fork"`
-	Exec             int   `db:"_exec"`
-	Interupt         int   `db:"_interupt"`
-	Systemcall       int   `db:"_systemcall"`
-	Constringswitch  int   `db:"_constringswitch"`
-	Semaphore        int   `db:"_semaphore"`
-	Msg              int   `db:"_msg"`
-	Diskreadwrite    int   `db:"_diskreadwrite"`
-	Diskiops         int   `db:"_diskiops"`
-	Networkreadwrite int   `db:"_networkreadwrite"`
-	Networkiops      int   `db:"_networkiops"`
-	Topcommandid     int   `db:"_topcommandid"`
-	Topcommandcount  int   `db:"_topcommandcount"`
-	Topuserid        int   `db:"_topuserid"`
-	Topcpu           int   `db:"_topcpu"`
-	Topdiskid        int   `db:"_topdiskid"`
-	Topvgid          int   `db:"_topvgid"`
-	Topbusy          int   `db:"_topbusy"`
-	Maxpid           int   `db:"_maxpid"`
-	Threadcount      int   `db:"_threadcount"`
-	Pidcount         int   `db:"_pidcount"`
-	Linuxbuffer      int   `db:"_linuxbuffer"`
-	Linuxcached      int   `db:"_linuxcached"`
-	Linuxsrec        int   `db:"_linuxsrec"`
-	Memused_Mb       int   `db:"_memused_Mb"`
-	Irq              int   `db:"_irq"`
-	Softirq          int   `db:"_softirq"`
-	Swapused_Mb      int   `db:"_swapused_Mb"`
-	Dusm             int   `db:"_dusm"`
+	Ontunetime       time.Time `db:"_ontunetime"`
+	Agenttime        int       `db:"_agenttime"`
+	Agentid          int       `db:"_agentid"`
+	User             int       `db:"_user"`
+	Sys              int       `db:"_sys"`
+	Wait             int       `db:"_wait"`
+	Idle             int       `db:"_idle"`
+	Processorcount   int       `db:"_processorcount"`
+	Runqueue         int       `db:"_runqueue"`
+	Blockqueue       int       `db:"_blockqueue"`
+	Waitqueue        int       `db:"_waitqueue"`
+	Pqueue           int       `db:"_pqueue"`
+	Pcrateuser       int       `db:"_pcrateuser"`
+	Pcratesys        int       `db:"_pcratesys"`
+	Memorysize       int       `db:"_memorysize"`
+	Memoryused       int       `db:"_memoryused"`
+	Memorypinned     int       `db:"_memorypinned"`
+	Memorysys        int       `db:"_memorysys"`
+	Memoryuser       int       `db:"_memoryuser"`
+	Memorycache      int       `db:"_memorycache"`
+	Avm              int       `db:"_avm"`
+	Pagingspacein    int       `db:"_pagingspacein"`
+	Pagingspaceout   int       `db:"_pagingspaceout"`
+	Filesystemin     int       `db:"_filesystemin"`
+	Filesystemout    int       `db:"_filesystemout"`
+	Memoryscan       int       `db:"_memoryscan"`
+	Memoryfreed      int       `db:"_memoryfreed"`
+	Swapsize         int       `db:"_swapsize"`
+	Swapused         int       `db:"_swapused"`
+	Swapactive       int       `db:"_swapactive"`
+	Fork             int       `db:"_fork"`
+	Exec             int       `db:"_exec"`
+	Interupt         int       `db:"_interupt"`
+	Systemcall       int       `db:"_systemcall"`
+	Contextswitch    int       `db:"_contextswitch"`
+	Semaphore        int       `db:"_semaphore"`
+	Msg              int       `db:"_msg"`
+	Diskreadwrite    int       `db:"_diskreadwrite"`
+	Diskiops         int       `db:"_diskiops"`
+	Networkreadwrite int       `db:"_networkreadwrite"`
+	Networkiops      int       `db:"_networkiops"`
+	Topcommandid     int       `db:"_topcommandid"`
+	Topcommandcount  int       `db:"_topcommandcount"`
+	Topuserid        int       `db:"_topuserid"`
+	Topcpu           int       `db:"_topcpu"`
+	Topdiskid        int       `db:"_topdiskid"`
+	Topvgid          int       `db:"_topvgid"`
+	Topbusy          int       `db:"_topbusy"`
+	Maxpid           int       `db:"_maxpid"`
+	Threadcount      int       `db:"_threadcount"`
+	Pidcount         int       `db:"_pidcount"`
+	Linuxbuffer      int       `db:"_linuxbuffer"`
+	Linuxcached      int       `db:"_linuxcached"`
+	Linuxsrec        int       `db:"_linuxsrec"`
+	Memused_Mb       int       `db:"_memused_Mb"`
+	Irq              int       `db:"_irq"`
+	Softirq          int       `db:"_softirq"`
+	Swapused_Mb      int       `db:"_swapused_Mb"`
+	Dusm             int       `db:"_dusm"`
+}
+
+func (r *RealtimeperfTs) SetData(data interface{}) {
+	d := data.(*AgentRealTimePerf)
+	r.Ontunetime = d.Agenttime
+	r.Agenttime = int(d.Agenttime.Unix())
+	r.Agentid = 0
+	r.User = d.User
+	r.Sys = d.Sys
+	r.Wait = d.Wait
+	r.Idle = d.Idle
+	r.Processorcount = d.ProcessorCount
+	r.Runqueue = d.RunQueue
+	r.Blockqueue = d.BlockQueue
+	r.Waitqueue = d.WaitQueue
+	r.Pqueue = d.PQueue
+	r.Pcrateuser = d.PCRateUser
+	r.Pcratesys = d.PCRateSys
+	r.Memorysize = d.MemorySize
+	r.Memoryused = d.MemoryUsed
+	r.Memorypinned = d.MemoryPinned
+	r.Memorysys = d.MemorySys
+	r.Memoryuser = d.MemoryUser
+	r.Memorycache = d.MemoryCache
+	r.Avm = d.Avm
+	r.Pagingspacein = d.PagingspaceIn
+	r.Pagingspaceout = d.PaingSpaceOut
+	r.Filesystemin = d.FileSystemIn
+	r.Filesystemout = d.FileSystmeOut
+	r.Memoryscan = d.MemoryScan
+	r.Memoryfreed = d.MemoryFreed
+	r.Swapsize = d.SwapSize
+	r.Swapused = d.SwapUsed
+	r.Swapactive = d.SwapActive
+	r.Fork = d.Fork
+	r.Exec = d.Exec
+	r.Interupt = d.Interupt
+	r.Systemcall = d.SystemCall
+	r.Contextswitch = d.ContextSwitch
+	r.Semaphore = d.Semaphore
+	r.Msg = d.Msg
+	r.Diskreadwrite = d.DiskReadWrite
+	r.Diskiops = d.DiskIOPS
+	r.Networkreadwrite = d.NetworkReadWrite
+	r.Networkiops = 0
+	r.Topcommandid = d.TopCommandID
+	r.Topcommandcount = d.TopCommandCount
+	r.Topuserid = d.TopUserID
+	r.Topcpu = d.TopCPU
+	r.Topdiskid = d.TopDiskID
+	r.Topvgid = d.TopvgID
+	r.Topbusy = d.TOPBusy
+	r.Maxpid = d.MaxPID
+	r.Threadcount = d.ThreadCount
+	r.Pidcount = d.PIDCount
+	r.Linuxbuffer = d.LinuxBuffer
+	r.Linuxcached = d.LinuxCached
+	r.Linuxsrec = d.Linuxsrec
+	r.Memused_Mb = d.Memused_mb
+	r.Irq = d.IRQ
+	r.Softirq = d.SoftIRQ
+	r.Swapused_Mb = d.Swapused_MB
+	r.Dusm = d.DUSM
 }
 
 type RealtimediskPg struct {
@@ -265,17 +393,17 @@ type RealtimediskPg struct {
 }
 
 type RealtimediskTs struct {
-	Ontunetime   int64 `db:"_ontunetime"`
-	Agenttime    int   `db:"_agenttime"`
-	Agentid      int   `db:"_agentid"`
-	Ionameid     int   `db:"_ionameid"`
-	Readrate     int   `db:"_readrate"`
-	Writerate    int   `db:"_writerate"`
-	Iops         int   `db:"_iops"`
-	Busy         int   `db:"_busy"`
-	Descid       int   `db:"_descid"`
-	Readsvctime  int   `db:"_readsvctime"`
-	Writesvctime int   `db:"_writesvctime"`
+	Ontunetime   time.Time `db:"_ontunetime"`
+	Agenttime    int       `db:"_agenttime"`
+	Agentid      int       `db:"_agentid"`
+	Ionameid     int       `db:"_ionameid"`
+	Readrate     int       `db:"_readrate"`
+	Writerate    int       `db:"_writerate"`
+	Iops         int       `db:"_iops"`
+	Busy         int       `db:"_busy"`
+	Descid       int       `db:"_descid"`
+	Readsvctime  int       `db:"_readsvctime"`
+	Writesvctime int       `db:"_writesvctime"`
 }
 
 type RealtimenetPg struct {
@@ -292,16 +420,16 @@ type RealtimenetPg struct {
 }
 
 type RealtimenetTs struct {
-	Ontunetime int64 `db:"_ontunetime"`
-	Agenttime  int   `db:"_agenttime"`
-	Agentid    int   `db:"_agentid"`
-	Ionameid   int   `db:"_ionameid"`
-	Readrate   int   `db:"_readrate"`
-	Writerate  int   `db:"_writerate"`
-	Readiops   int   `db:"_readiops"`
-	Writeiops  int   `db:"_writeiops"`
-	Errorps    int   `db:"_errorps"`
-	Collision  int   `db:"_collision"`
+	Ontunetime time.Time `db:"_ontunetime"`
+	Agenttime  int       `db:"_agenttime"`
+	Agentid    int       `db:"_agentid"`
+	Ionameid   int       `db:"_ionameid"`
+	Readrate   int       `db:"_readrate"`
+	Writerate  int       `db:"_writerate"`
+	Readiops   int       `db:"_readiops"`
+	Writeiops  int       `db:"_writeiops"`
+	Errorps    int       `db:"_errorps"`
+	Collision  int       `db:"_collision"`
 }
 
 type RealtimepidPg struct {
@@ -330,28 +458,28 @@ type RealtimepidPg struct {
 }
 
 type RealtimepidTs struct {
-	Ontunetime int64 `db:"_ontunetime"`
-	Agenttime  int   `db:"_agenttime"`
-	Agentid    int   `db:"_agentid"`
-	Pid        int   `db:"_pid"`
-	Ppid       int   `db:"_ppid"`
-	Uid        int   `db:"_uid"`
-	Cmdid      int   `db:"_cmdid"`
-	Userid     int   `db:"_userid"`
-	Argid      int   `db:"_argid"`
-	Usr        int   `db:"_usr"`
-	Sys        int   `db:"_sys"`
-	Usrsys     int   `db:"_usrsys"`
-	Sz         int   `db:"_sz"`
-	Rss        int   `db:"_rss"`
-	Vmem       int   `db:"_vmem"`
-	Chario     int   `db:"_chario"`
-	Processcnt int   `db:"_processcnt"`
-	Threadcnt  int   `db:"_threadcnt"`
-	Handlecnt  int   `db:"_handlecnt"`
-	Stime      int   `db:"_stime"`
-	Pvbytes    int   `db:"_pvbytes"`
-	Pgpool     int   `db:"_pgpool"`
+	Ontunetime time.Time `db:"_ontunetime"`
+	Agenttime  int       `db:"_agenttime"`
+	Agentid    int       `db:"_agentid"`
+	Pid        int       `db:"_pid"`
+	Ppid       int       `db:"_ppid"`
+	Uid        int       `db:"_uid"`
+	Cmdid      int       `db:"_cmdid"`
+	Userid     int       `db:"_userid"`
+	Argid      int       `db:"_argid"`
+	Usr        int       `db:"_usr"`
+	Sys        int       `db:"_sys"`
+	Usrsys     int       `db:"_usrsys"`
+	Sz         int       `db:"_sz"`
+	Rss        int       `db:"_rss"`
+	Vmem       int       `db:"_vmem"`
+	Chario     int       `db:"_chario"`
+	Processcnt int       `db:"_processcnt"`
+	Threadcnt  int       `db:"_threadcnt"`
+	Handlecnt  int       `db:"_handlecnt"`
+	Stime      int       `db:"_stime"`
+	Pvbytes    int       `db:"_pvbytes"`
+	Pgpool     int       `db:"_pgpool"`
 }
 
 type RealtimeprocPg struct {
@@ -374,22 +502,22 @@ type RealtimeprocPg struct {
 }
 
 type RealtimeprocTs struct {
-	Ontunetime int64 `db:"_ontunetime"`
-	Agenttime  int   `db:"_agenttime"`
-	Agentid    int   `db:"_agentid"`
-	Cmdid      int   `db:"_cmdid"`
-	Userid     int   `db:"_userid"`
-	Usr        int   `db:"_usr"`
-	Sys        int   `db:"_sys"`
-	Usrsys     int   `db:"_usrsys"`
-	Sz         int   `db:"_sz"`
-	Rss        int   `db:"_rss"`
-	Vmem       int   `db:"_vmem"`
-	Chario     int   `db:"_chario"`
-	Processcnt int   `db:"_processcnt"`
-	Threadcnt  int   `db:"_threadcnt"`
-	Pvbytes    int   `db:"_pvbytes"`
-	Pgpool     int   `db:"_pgpool"`
+	Ontunetime time.Time `db:"_ontunetime"`
+	Agenttime  int       `db:"_agenttime"`
+	Agentid    int       `db:"_agentid"`
+	Cmdid      int       `db:"_cmdid"`
+	Userid     int       `db:"_userid"`
+	Usr        int       `db:"_usr"`
+	Sys        int       `db:"_sys"`
+	Usrsys     int       `db:"_usrsys"`
+	Sz         int       `db:"_sz"`
+	Rss        int       `db:"_rss"`
+	Vmem       int       `db:"_vmem"`
+	Chario     int       `db:"_chario"`
+	Processcnt int       `db:"_processcnt"`
+	Threadcnt  int       `db:"_threadcnt"`
+	Pvbytes    int       `db:"_pvbytes"`
+	Pgpool     int       `db:"_pgpool"`
 }
 
 type SimpleStruct struct {
@@ -750,4 +878,74 @@ func (l *LastrealtimeperfArr) GetArgs() []interface{} {
 	data = append(data, pq.Array(l.Dummy30))
 
 	return data
+}
+
+func (l *LastrealtimeperfArr) GetArray() []Lastrealtimeperf {
+	arr := make([]Lastrealtimeperf, 0)
+	size := len(l.Agentid)
+
+	for i := 0; i < size; i++ {
+		arr = append(arr, Lastrealtimeperf{
+			Ontunetime:    l.Ontunetime[i],
+			Agentid:       l.Agentid[i],
+			Hostname:      l.Hostname[i],
+			User:          l.User[i],
+			Sys:           l.Sys[i],
+			Wait:          l.Wait[i],
+			Idle:          l.Idle[i],
+			Memoryused:    l.Memoryused[i],
+			Filecache:     l.Filecache[i],
+			Memorysize:    l.Memorysize[i],
+			Avm:           l.Avm[i],
+			Swapused:      l.Swapused[i],
+			Swapsize:      l.Swapsize[i],
+			Diskiorate:    l.Diskiorate[i],
+			Networkiorate: l.Networkiorate[i],
+			Topproc:       l.Topproc[i],
+			Topuser:       l.Topuser[i],
+			Topproccount:  l.Topproccount[i],
+			Topcpu:        l.Topcpu[i],
+			Topdisk:       l.Topdisk[i],
+			Topvg:         l.Topvg[i],
+			Topbusy:       l.Topbusy[i],
+			Maxcpu:        l.Maxcpu[i],
+			Maxmem:        l.Maxmem[i],
+			Maxswap:       l.Maxswap[i],
+			Maxdisk:       l.Maxdisk[i],
+			Diskiops:      l.Diskiops[i],
+			Networkiops:   l.Networkiops[i],
+			Dummy01:       l.Dummy01[i],
+			Dummy02:       l.Dummy02[i],
+			Dummy03:       l.Dummy03[i],
+			Dummy04:       l.Dummy04[i],
+			Dummy05:       l.Dummy05[i],
+			Dummy06:       l.Dummy06[i],
+			Dummy07:       l.Dummy07[i],
+			Dummy08:       l.Dummy08[i],
+			Dummy09:       l.Dummy09[i],
+			Dummy10:       l.Dummy10[i],
+			Dummy11:       l.Dummy11[i],
+			Dummy12:       l.Dummy12[i],
+			Dummy13:       l.Dummy13[i],
+			Dummy14:       l.Dummy14[i],
+			Dummy15:       l.Dummy15[i],
+			Dummy16:       l.Dummy16[i],
+			Dummy17:       l.Dummy17[i],
+			Dummy18:       l.Dummy18[i],
+			Dummy19:       l.Dummy19[i],
+			Dummy20:       l.Dummy20[i],
+			Dummy21:       l.Dummy21[i],
+			Dummy22:       l.Dummy22[i],
+			Dummy23:       l.Dummy23[i],
+			Dummy24:       l.Dummy24[i],
+			Dummy25:       l.Dummy25[i],
+			Dummy26:       l.Dummy26[i],
+			Dummy27:       l.Dummy27[i],
+			Dummy28:       l.Dummy28[i],
+			Dummy29:       l.Dummy29[i],
+			Dummy30:       l.Dummy30[i],
+		})
+	}
+
+	return arr
 }

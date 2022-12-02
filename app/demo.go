@@ -71,11 +71,10 @@ func GetDemoAgentinfo(arr chan<- *data.AgentinfoArr, hostcount int) {
 	arr <- &agentinfo_arr
 }
 
-func GetDemoChangeStateAgent(agents chan<- []int, agent_str chan<- string, demo DemoInfo) {
+func GetDemoChangeStateAgent(agent_str chan<- string, demo DemoInfo) {
 	ticker := time.NewTicker(time.Second * 1)
 	for range ticker.C {
 		random_agent_map := make(map[int]struct{})
-		random_agents := make([]int, 0)
 		random_agent_str := make([]string, 0)
 		for i := 0; i < demo.HostChangeCount; i++ {
 			agentid := rand.Intn(demo.HostCount)
@@ -83,11 +82,9 @@ func GetDemoChangeStateAgent(agents chan<- []int, agent_str chan<- string, demo 
 				continue
 			} else {
 				random_agent_map[agentid] = struct{}{}
-				random_agents = append(random_agents, agentid)
 				random_agent_str = append(random_agent_str, strconv.Itoa(agentid))
 			}
 		}
-		agents <- random_agents
 		agent_str <- strings.Join(random_agent_str, ",")
 		time.Sleep(time.Second * time.Duration(demo.Interval))
 	}

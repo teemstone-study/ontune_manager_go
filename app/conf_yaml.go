@@ -21,6 +21,10 @@ type KafkaInfo struct {
 	Port string `yaml:"port"`
 }
 
+type ApiServer struct {
+	Port string `yaml:"port"`
+}
+
 type DemoInfo struct {
 	HostCount       int `yaml:"host_count"`
 	HostChangeCount int `yaml:"host_change_count"`
@@ -29,9 +33,10 @@ type DemoInfo struct {
 }
 
 type Config struct {
-	Database  []DbInfo  `yaml:"database"`
-	KafkaInfo KafkaInfo `yaml:"kafka"`
-	Demo      DemoInfo  `yaml:"demo"`
+	Database      []DbInfo  `yaml:"database"`
+	KafkaInfo     KafkaInfo `yaml:"kafka"`
+	ApiServerInfo ApiServer `yaml:"apiserver"`
+	Demo          DemoInfo  `yaml:"demo"`
 }
 
 func (d DbInfo) Datasource() string {
