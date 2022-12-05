@@ -190,11 +190,11 @@ type RealtimeperfPg struct {
 	Dusm             int   `db:"_dusm"`
 }
 
-func (r *RealtimeperfPg) SetData(data interface{}) {
+func (r *RealtimeperfPg) SetData(data interface{}, agentid int) {
 	d := data.(*AgentRealTimePerf)
 	r.Ontunetime = d.Agenttime.Unix()
 	r.Agenttime = int(d.Agenttime.Unix())
-	r.Agentid = 0
+	r.Agentid = agentid
 	r.User = d.User
 	r.Sys = d.Sys
 	r.Wait = d.Wait
@@ -251,6 +251,71 @@ func (r *RealtimeperfPg) SetData(data interface{}) {
 	r.Softirq = d.SoftIRQ
 	r.Swapused_Mb = d.Swapused_MB
 	r.Dusm = d.DUSM
+}
+
+func (r *RealtimeperfPg) GetArgs() []interface{} {
+	data := make([]interface{}, 0)
+	data = append(data, r.Ontunetime)
+	data = append(data, r.Agenttime)
+	data = append(data, r.Agentid)
+	data = append(data, r.User)
+	data = append(data, r.Sys)
+	data = append(data, r.Wait)
+	data = append(data, r.Idle)
+	data = append(data, r.Processorcount)
+	data = append(data, r.Runqueue)
+	data = append(data, r.Blockqueue)
+	data = append(data, r.Waitqueue)
+	data = append(data, r.Pqueue)
+	data = append(data, r.Pcrateuser)
+	data = append(data, r.Pcratesys)
+	data = append(data, r.Memorysize)
+	data = append(data, r.Memoryused)
+	data = append(data, r.Memorypinned)
+	data = append(data, r.Memorysys)
+	data = append(data, r.Memoryuser)
+	data = append(data, r.Memorycache)
+	data = append(data, r.Avm)
+	data = append(data, r.Pagingspacein)
+	data = append(data, r.Pagingspaceout)
+	data = append(data, r.Filesystemin)
+	data = append(data, r.Filesystemout)
+	data = append(data, r.Memoryscan)
+	data = append(data, r.Memoryfreed)
+	data = append(data, r.Swapsize)
+	data = append(data, r.Swapused)
+	data = append(data, r.Swapactive)
+	data = append(data, r.Fork)
+	data = append(data, r.Exec)
+	data = append(data, r.Interupt)
+	data = append(data, r.Systemcall)
+	data = append(data, r.Contextswitch)
+	data = append(data, r.Semaphore)
+	data = append(data, r.Msg)
+	data = append(data, r.Diskreadwrite)
+	data = append(data, r.Diskiops)
+	data = append(data, r.Networkreadwrite)
+	data = append(data, r.Networkiops)
+	data = append(data, r.Topcommandid)
+	data = append(data, r.Topcommandcount)
+	data = append(data, r.Topuserid)
+	data = append(data, r.Topcpu)
+	data = append(data, r.Topdiskid)
+	data = append(data, r.Topvgid)
+	data = append(data, r.Topbusy)
+	data = append(data, r.Maxpid)
+	data = append(data, r.Threadcount)
+	data = append(data, r.Pidcount)
+	data = append(data, r.Linuxbuffer)
+	data = append(data, r.Linuxcached)
+	data = append(data, r.Linuxsrec)
+	data = append(data, r.Memused_Mb)
+	data = append(data, r.Irq)
+	data = append(data, r.Softirq)
+	data = append(data, r.Swapused_Mb)
+	data = append(data, r.Dusm)
+
+	return data
 }
 
 type RealtimeperfTs struct {
@@ -315,11 +380,11 @@ type RealtimeperfTs struct {
 	Dusm             int       `db:"_dusm"`
 }
 
-func (r *RealtimeperfTs) SetData(data interface{}) {
+func (r *RealtimeperfTs) SetData(data interface{}, agentid int) {
 	d := data.(*AgentRealTimePerf)
 	r.Ontunetime = d.Agenttime
 	r.Agenttime = int(d.Agenttime.Unix())
-	r.Agentid = 0
+	r.Agentid = agentid
 	r.User = d.User
 	r.Sys = d.Sys
 	r.Wait = d.Wait
@@ -376,6 +441,71 @@ func (r *RealtimeperfTs) SetData(data interface{}) {
 	r.Softirq = d.SoftIRQ
 	r.Swapused_Mb = d.Swapused_MB
 	r.Dusm = d.DUSM
+}
+
+func (r *RealtimeperfTs) GetArgs() []interface{} {
+	data := make([]interface{}, 0)
+	data = append(data, r.Ontunetime)
+	data = append(data, r.Agenttime)
+	data = append(data, r.Agentid)
+	data = append(data, r.User)
+	data = append(data, r.Sys)
+	data = append(data, r.Wait)
+	data = append(data, r.Idle)
+	data = append(data, r.Processorcount)
+	data = append(data, r.Runqueue)
+	data = append(data, r.Blockqueue)
+	data = append(data, r.Waitqueue)
+	data = append(data, r.Pqueue)
+	data = append(data, r.Pcrateuser)
+	data = append(data, r.Pcratesys)
+	data = append(data, r.Memorysize)
+	data = append(data, r.Memoryused)
+	data = append(data, r.Memorypinned)
+	data = append(data, r.Memorysys)
+	data = append(data, r.Memoryuser)
+	data = append(data, r.Memorycache)
+	data = append(data, r.Avm)
+	data = append(data, r.Pagingspacein)
+	data = append(data, r.Pagingspaceout)
+	data = append(data, r.Filesystemin)
+	data = append(data, r.Filesystemout)
+	data = append(data, r.Memoryscan)
+	data = append(data, r.Memoryfreed)
+	data = append(data, r.Swapsize)
+	data = append(data, r.Swapused)
+	data = append(data, r.Swapactive)
+	data = append(data, r.Fork)
+	data = append(data, r.Exec)
+	data = append(data, r.Interupt)
+	data = append(data, r.Systemcall)
+	data = append(data, r.Contextswitch)
+	data = append(data, r.Semaphore)
+	data = append(data, r.Msg)
+	data = append(data, r.Diskreadwrite)
+	data = append(data, r.Diskiops)
+	data = append(data, r.Networkreadwrite)
+	data = append(data, r.Networkiops)
+	data = append(data, r.Topcommandid)
+	data = append(data, r.Topcommandcount)
+	data = append(data, r.Topuserid)
+	data = append(data, r.Topcpu)
+	data = append(data, r.Topdiskid)
+	data = append(data, r.Topvgid)
+	data = append(data, r.Topbusy)
+	data = append(data, r.Maxpid)
+	data = append(data, r.Threadcount)
+	data = append(data, r.Pidcount)
+	data = append(data, r.Linuxbuffer)
+	data = append(data, r.Linuxcached)
+	data = append(data, r.Linuxsrec)
+	data = append(data, r.Memused_Mb)
+	data = append(data, r.Irq)
+	data = append(data, r.Softirq)
+	data = append(data, r.Swapused_Mb)
+	data = append(data, r.Dusm)
+
+	return data
 }
 
 type RealtimediskPg struct {

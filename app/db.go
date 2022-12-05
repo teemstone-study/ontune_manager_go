@@ -305,20 +305,26 @@ func (d *DBHandler) SetPerf(csperf *data.AgentRealTimePerf) {
 	}
 
 	// Insert Perf
-	// 사실 tablename을 날짜정보로 받아서 신규 Creation하고 하는 부분도 진행해야 하지 않을까
 	fmt.Println(agentid)
 	tablename, dbtype := d.GetTableinfo("realtimeperf")
 
 	if dbtype == "pg" {
 		perf_data := data.RealtimeperfPg{}
-		perf_data.SetData(csperf)
+		perf_data.SetData(csperf, agentid)
+
+		tx := d.db.MustBegin()
+		tx.MustExec(fmt.Sprintf(data.InsertRealtimePerf, tablename), perf_data.GetArgs()...)
+		tx.Commit()
 	} else {
 		perf_data := data.RealtimeperfTs{}
-		perf_data.SetData(csperf)
+		perf_data.SetData(csperf, agentid)
+
+		tx := d.db.MustBegin()
+		tx.MustExec(fmt.Sprintf(data.InsertRealtimePerf, tablename), perf_data.GetArgs()...)
+		tx.Commit()
 	}
 
 	fmt.Println(tablename)
-	// 이제 이 부분을 실제 Insert도 하고, 다른데 Insert하는 부분도 넣고 좀 해보고 그러자..
 }
 
 func (d *DBHandler) SetPid(csperf *data.AgentRealTimePID) {
