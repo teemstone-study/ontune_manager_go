@@ -20,7 +20,7 @@ type DBHandler struct {
 
 var (
 	info_tables       = [...]string{"tableinfo", "agentinfo", "lastrealtimeperf", "deviceid", "descid"}
-	metric_ref_tables = [...]string{"proccmd", "procuserid"}
+	metric_ref_tables = [...]string{"proccmd", "procuserid", "procargid"}
 	metric_tables     = [...]string{"realtimeperf", "realtimecpu", "realtimedisk", "realtimenet", "realtimepid", "realtimeproc"}
 )
 
@@ -307,28 +307,185 @@ func (d *DBHandler) SetPerf(csperf *data.AgentRealTimePerf) {
 	// Insert Perf
 	fmt.Println(agentid)
 	tablename, dbtype := d.GetTableinfo("realtimeperf")
+	tablename2, _ := d.GetTableinfo("realtimecpu")
 
 	if dbtype == "pg" {
 		perf_data := data.RealtimeperfPg{}
 		perf_data.SetData(csperf, agentid)
 
+		cpu_data := data.RealtimecpuPg{}
+		cpu_data.SetData(csperf, agentid)
+
 		tx := d.db.MustBegin()
-		tx.MustExec(fmt.Sprintf(data.InsertRealtimePerf, tablename), perf_data.GetArgs()...)
+		var err error
+		_, err = tx.Exec(fmt.Sprintf(data.InsertRealtimePerf, tablename), perf_data.GetArgs()...)
+		if err != nil {
+			log.Println(err)
+			tx.Rollback()
+			return
+		}
+		_, err = tx.Exec(fmt.Sprintf(data.InsertRealtimeCpu, tablename2), cpu_data.GetArgs()...)
+		if err != nil {
+			log.Println(err)
+			tx.Rollback()
+			return
+		}
 		tx.Commit()
 	} else {
 		perf_data := data.RealtimeperfTs{}
 		perf_data.SetData(csperf, agentid)
 
+		cpu_data := data.RealtimecpuPg{}
+		cpu_data.SetData(csperf, agentid)
+
 		tx := d.db.MustBegin()
-		tx.MustExec(fmt.Sprintf(data.InsertRealtimePerf, tablename), perf_data.GetArgs()...)
+		var err error
+		_, err = tx.Exec(fmt.Sprintf(data.InsertRealtimePerf, tablename), perf_data.GetArgs()...)
+		if err != nil {
+			log.Println(err)
+			tx.Rollback()
+			return
+		}
+		_, err = tx.Exec(fmt.Sprintf(data.InsertRealtimeCpu, tablename2), cpu_data.GetArgs()...)
+		if err != nil {
+			log.Println(err)
+			tx.Rollback()
+			return
+		}
 		tx.Commit()
 	}
-
-	fmt.Println(tablename)
 }
 
-func (d *DBHandler) SetPid(csperf *data.AgentRealTimePID) {
+func (d *DBHandler) SetPid(cspid *data.AgentRealTimePID) {
+	fmt.Printf("realtimeperf update %s\n", cspid.AgentID)
+	var agentid int
 
+	// Check Agent
+	if _, ok := d.hosts[cspid.AgentID]; ok {
+		agentid = d.hosts[cspid.AgentID]
+	} else {
+		// Agent 정보보다 Perf 정보가 먼저 들어올 때 미존재하는 Agent면 Error 발생 가능성이 있으므로, Agent 정보를 먼저 구성해야 함
+		// Agent 정보는 AgentID만 넘기고 나머지는 빈 정보로 구성
+		// 어차피 Consumer Agent 정보가 들어오면 이미 존재하는 AgentID이므로 업데이트됨
+		agentid = d.SetHostinfo(&data.AgentHostAgentInfo{
+			AgentName:    cspid.AgentID,
+			AgentID:      cspid.AgentID,
+			Model:        "",
+			Serial:       "",
+			Ip:           "",
+			Os:           "",
+			Agentversion: "",
+			ProcessCount: 0,
+			ProcessClock: 0,
+			MemorySize:   0,
+			SwapMemory:   0,
+		})
+	}
+
+	// Insert Perf
+	fmt.Println(agentid)
+	tablename, dbtype := d.GetTableinfo("realtimepid")
+	tablename2, _ := d.GetTableinfo("realtimeproc")
+	fmt.Println(tablename)
+
+	if dbtype == "pg" {
+		pid_data := data.RealtimepidPgArr{}
+		proc_data := data.RealtimeprocPgArr{}
+		for _, p := range cspid.PerfList {
+			cmdid, userid, argid := d.GetProcid(&p)
+			pid_data.SetData(p, cspid.Agenttime, agentid, cmdid, userid, argid)
+			proc_data.SetData(p, cspid.Agenttime, agentid, cmdid, userid, argid)
+		}
+
+		tx := d.db.MustBegin()
+		var err error
+		_, err = tx.Exec(fmt.Sprintf(data.InsertRealtimePidPg, tablename), pid_data.GetArgs()...)
+		if err != nil {
+			log.Println(err)
+			tx.Rollback()
+			return
+		}
+		_, err = tx.Exec(fmt.Sprintf(data.InsertRealtimeProcPg, tablename2), proc_data.GetArgs()...)
+		if err != nil {
+			log.Println(err)
+			tx.Rollback()
+			return
+		}
+		tx.Commit()
+	} else {
+		pid_data := data.RealtimepidTsArr{}
+		proc_data := data.RealtimeprocTsArr{}
+		for _, p := range cspid.PerfList {
+			cmdid, userid, argid := d.GetProcid(&p)
+			pid_data.SetData(p, cspid.Agenttime, agentid, cmdid, userid, argid)
+			proc_data.SetData(p, cspid.Agenttime, agentid, cmdid, userid, argid)
+		}
+
+		var err error
+		tx := d.db.MustBegin()
+		_, err = tx.Exec(fmt.Sprintf(data.InsertRealtimePidTs, tablename), pid_data.GetArgs()...)
+		if err != nil {
+			log.Println(err)
+			tx.Rollback()
+			return
+		}
+		_, err = tx.Exec(fmt.Sprintf(data.InsertRealtimeProcTs, tablename2), proc_data.GetArgs()...)
+		if err != nil {
+			log.Println(err)
+			tx.Rollback()
+			return
+		}
+		tx.Commit()
+	}
+}
+
+func (d *DBHandler) GetProcid(cspidinner *data.AgentRealTimePIDInner) (int, int, int) {
+	var tablename string
+	var err error
+
+	var cmdid int
+	tablename, _ = d.GetTableinfo("proccmd")
+	err = d.db.QueryRow(fmt.Sprintf("SELECT _id FROM %s where _name=$1", tablename), cspidinner.Cmdname).Scan(&cmdid)
+	if err != nil {
+		tx := d.db.MustBegin()
+		tx.MustExec(fmt.Sprintf(data.InsertSimpleTable, tablename), cspidinner.Cmdname)
+		tx.Commit()
+
+		err := d.db.QueryRow(fmt.Sprintf("SELECT _id FROM %s where _name=$1", tablename), cspidinner.Cmdname).Scan(&cmdid)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	var userid int
+	tablename, _ = d.GetTableinfo("procuserid")
+	err = d.db.QueryRow(fmt.Sprintf("SELECT _id FROM %s where _name=$1", tablename), cspidinner.Username).Scan(&userid)
+	if err != nil {
+		tx := d.db.MustBegin()
+		tx.MustExec(fmt.Sprintf(data.InsertSimpleTable, tablename), cspidinner.Username)
+		tx.Commit()
+
+		err := d.db.QueryRow(fmt.Sprintf("SELECT _id FROM %s where _name=$1", tablename), cspidinner.Username).Scan(&userid)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	var argid int
+	tablename, _ = d.GetTableinfo("procargid")
+	err = d.db.QueryRow(fmt.Sprintf("SELECT _id FROM %s where _name=$1", tablename), cspidinner.Argname).Scan(&argid)
+	if err != nil {
+		tx := d.db.MustBegin()
+		tx.MustExec(fmt.Sprintf(data.InsertSimpleTable, tablename), cspidinner.Argname)
+		tx.Commit()
+
+		err := d.db.QueryRow(fmt.Sprintf("SELECT _id FROM %s where _name=$1", tablename), cspidinner.Argname).Scan(&argid)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	return cmdid, userid, argid
 }
 
 func (d *DBHandler) SetDisk(csperf *data.AgentRealTimeDisk) {

@@ -508,6 +508,116 @@ func (r *RealtimeperfTs) GetArgs() []interface{} {
 	return data
 }
 
+type RealtimecpuPg struct {
+	Ontunetime    int64 `db:"_ontunetime"`
+	Agenttime     int   `db:"_agenttime"`
+	Agentid       int   `db:"_agentid"`
+	Index         int   `db:"_index"`
+	User          int   `db:"_user"`
+	Sys           int   `db:"_sys"`
+	Wait          int   `db:"_wait"`
+	Idle          int   `db:"_idle"`
+	Runqueue      int   `db:"_runqueue"`
+	Fork          int   `db:"_fork"`
+	Exec          int   `db:"_exec"`
+	Interupt      int   `db:"_interupt"`
+	Systemcall    int   `db:"_systemcall"`
+	Contextswitch int   `db:"_contextswitch"`
+}
+
+func (r *RealtimecpuPg) SetData(data interface{}, agentid int) {
+	d := data.(*AgentRealTimePerf)
+	r.Ontunetime = d.Agenttime.Unix()
+	r.Agenttime = int(d.Agenttime.Unix())
+	r.Agentid = agentid
+	r.Index = 0
+	r.User = d.User
+	r.Sys = d.Sys
+	r.Wait = d.Wait
+	r.Idle = d.Idle
+	r.Runqueue = d.RunQueue
+	r.Fork = d.Fork
+	r.Exec = d.Exec
+	r.Interupt = d.Interupt
+	r.Systemcall = d.SystemCall
+	r.Contextswitch = d.ContextSwitch
+}
+
+func (r *RealtimecpuPg) GetArgs() []interface{} {
+	data := make([]interface{}, 0)
+	data = append(data, r.Ontunetime)
+	data = append(data, r.Agenttime)
+	data = append(data, r.Agentid)
+	data = append(data, r.Index)
+	data = append(data, r.User)
+	data = append(data, r.Sys)
+	data = append(data, r.Wait)
+	data = append(data, r.Idle)
+	data = append(data, r.Runqueue)
+	data = append(data, r.Fork)
+	data = append(data, r.Exec)
+	data = append(data, r.Interupt)
+	data = append(data, r.Systemcall)
+	data = append(data, r.Contextswitch)
+
+	return data
+}
+
+type RealtimecpuTs struct {
+	Ontunetime    time.Time `db:"_ontunetime"`
+	Agenttime     int       `db:"_agenttime"`
+	Agentid       int       `db:"_agentid"`
+	Index         int       `db:"_index"`
+	User          int       `db:"_user"`
+	Sys           int       `db:"_sys"`
+	Wait          int       `db:"_wait"`
+	Idle          int       `db:"_idle"`
+	Runqueue      int       `db:"_runqueue"`
+	Fork          int       `db:"_fork"`
+	Exec          int       `db:"_exec"`
+	Interupt      int       `db:"_interupt"`
+	Systemcall    int       `db:"_systemcall"`
+	Contextswitch int       `db:"_contextswitch"`
+}
+
+func (r *RealtimecpuTs) SetData(data interface{}, agentid int) {
+	d := data.(*AgentRealTimePerf)
+	r.Ontunetime = d.Agenttime
+	r.Agenttime = int(d.Agenttime.Unix())
+	r.Agentid = agentid
+	r.Index = 0
+	r.User = d.User
+	r.Sys = d.Sys
+	r.Wait = d.Wait
+	r.Idle = d.Idle
+	r.Runqueue = d.RunQueue
+	r.Fork = d.Fork
+	r.Exec = d.Exec
+	r.Interupt = d.Interupt
+	r.Systemcall = d.SystemCall
+	r.Contextswitch = d.ContextSwitch
+}
+
+func (r *RealtimecpuTs) GetArgs() []interface{} {
+	data := make([]interface{}, 0)
+	data = append(data, r.Ontunetime)
+	data = append(data, r.Agenttime)
+	data = append(data, r.Agentid)
+	data = append(data, r.Index)
+	data = append(data, r.User)
+	data = append(data, r.Sys)
+	data = append(data, r.Wait)
+	data = append(data, r.Idle)
+	data = append(data, r.Runqueue)
+	data = append(data, r.Fork)
+	data = append(data, r.Exec)
+	data = append(data, r.Interupt)
+	data = append(data, r.Systemcall)
+	data = append(data, r.Contextswitch)
+
+	return data
+}
+
 type RealtimediskPg struct {
 	Ontunetime   int64 `db:"_ontunetime"`
 	Agenttime    int   `db:"_agenttime"`
@@ -587,6 +697,85 @@ type RealtimepidPg struct {
 	Pgpool     int   `db:"_pgpool"`
 }
 
+type RealtimepidPgArr struct {
+	Ontunetime []int64
+	Agenttime  []int
+	Agentid    []int
+	Pid        []int
+	Ppid       []int
+	Uid        []int
+	Cmdid      []int
+	Userid     []int
+	Argid      []int
+	Usr        []int
+	Sys        []int
+	Usrsys     []int
+	Sz         []int
+	Rss        []int
+	Vmem       []int
+	Chario     []int
+	Processcnt []int
+	Threadcnt  []int
+	Handlecnt  []int
+	Stime      []int
+	Pvbytes    []int
+	Pgpool     []int
+}
+
+func (r *RealtimepidPgArr) SetData(data interface{}, agenttime time.Time, agentid int, cmdid int, userid int, argid int) {
+	d := data.(AgentRealTimePIDInner)
+	r.Ontunetime = append(r.Ontunetime, agenttime.Unix())
+	r.Agenttime = append(r.Agenttime, int(agenttime.Unix()))
+	r.Agentid = append(r.Agentid, agentid)
+	r.Pid = append(r.Pid, d.Pid)
+	r.Ppid = append(r.Ppid, d.Ppid)
+	r.Uid = append(r.Uid, d.Uid)
+	r.Cmdid = append(r.Cmdid, cmdid)
+	r.Userid = append(r.Userid, userid)
+	r.Argid = append(r.Argid, argid)
+	r.Usr = append(r.Usr, d.Usr)
+	r.Sys = append(r.Sys, d.Sys)
+	r.Usrsys = append(r.Usrsys, d.Usrsys)
+	r.Sz = append(r.Sz, d.Sz)
+	r.Rss = append(r.Rss, d.Rss)
+	r.Vmem = append(r.Vmem, d.Vmem)
+	r.Chario = append(r.Chario, d.Chario)
+	r.Processcnt = append(r.Processcnt, d.Processcnt)
+	r.Threadcnt = append(r.Threadcnt, d.Threadcnt)
+	r.Handlecnt = append(r.Handlecnt, d.Handlecnt)
+	r.Stime = append(r.Stime, d.Stime)
+	r.Pvbytes = append(r.Pvbytes, d.Pvbytes)
+	r.Pgpool = append(r.Pgpool, d.Pgpool)
+}
+
+func (r *RealtimepidPgArr) GetArgs() []interface{} {
+	data := make([]interface{}, 0)
+	data = append(data, pq.Array(r.Ontunetime))
+	data = append(data, pq.Array(r.Agenttime))
+	data = append(data, pq.Array(r.Agentid))
+	data = append(data, pq.Array(r.Pid))
+	data = append(data, pq.Array(r.Ppid))
+	data = append(data, pq.Array(r.Uid))
+	data = append(data, pq.Array(r.Cmdid))
+	data = append(data, pq.Array(r.Userid))
+	data = append(data, pq.Array(r.Argid))
+	data = append(data, pq.Array(r.Usr))
+	data = append(data, pq.Array(r.Sys))
+	data = append(data, pq.Array(r.Usrsys))
+	data = append(data, pq.Array(r.Sz))
+	data = append(data, pq.Array(r.Rss))
+	data = append(data, pq.Array(r.Vmem))
+	data = append(data, pq.Array(r.Chario))
+	data = append(data, pq.Array(r.Processcnt))
+	data = append(data, pq.Array(r.Threadcnt))
+	data = append(data, pq.Array(r.Handlecnt))
+	data = append(data, pq.Array(r.Stime))
+	data = append(data, pq.Array(r.Pvbytes))
+	data = append(data, pq.Array(r.Pgpool))
+
+	return data
+}
+
 type RealtimepidTs struct {
 	Ontunetime time.Time `db:"_ontunetime"`
 	Agenttime  int       `db:"_agenttime"`
@@ -612,6 +801,85 @@ type RealtimepidTs struct {
 	Pgpool     int       `db:"_pgpool"`
 }
 
+type RealtimepidTsArr struct {
+	Ontunetime []time.Time
+	Agenttime  []int
+	Agentid    []int
+	Pid        []int
+	Ppid       []int
+	Uid        []int
+	Cmdid      []int
+	Userid     []int
+	Argid      []int
+	Usr        []int
+	Sys        []int
+	Usrsys     []int
+	Sz         []int
+	Rss        []int
+	Vmem       []int
+	Chario     []int
+	Processcnt []int
+	Threadcnt  []int
+	Handlecnt  []int
+	Stime      []int
+	Pvbytes    []int
+	Pgpool     []int
+}
+
+func (r *RealtimepidTsArr) SetData(data interface{}, agenttime time.Time, agentid int, cmdid int, userid int, argid int) {
+	d := data.(AgentRealTimePIDInner)
+	r.Ontunetime = append(r.Ontunetime, agenttime)
+	r.Agenttime = append(r.Agenttime, int(agenttime.Unix()))
+	r.Agentid = append(r.Agentid, agentid)
+	r.Pid = append(r.Pid, d.Pid)
+	r.Ppid = append(r.Ppid, d.Ppid)
+	r.Uid = append(r.Uid, d.Uid)
+	r.Cmdid = append(r.Cmdid, cmdid)
+	r.Userid = append(r.Userid, userid)
+	r.Argid = append(r.Argid, argid)
+	r.Usr = append(r.Usr, d.Usr)
+	r.Sys = append(r.Sys, d.Sys)
+	r.Usrsys = append(r.Usrsys, d.Usrsys)
+	r.Sz = append(r.Sz, d.Sz)
+	r.Rss = append(r.Rss, d.Rss)
+	r.Vmem = append(r.Vmem, d.Vmem)
+	r.Chario = append(r.Chario, d.Chario)
+	r.Processcnt = append(r.Processcnt, d.Processcnt)
+	r.Threadcnt = append(r.Threadcnt, d.Threadcnt)
+	r.Handlecnt = append(r.Handlecnt, d.Handlecnt)
+	r.Stime = append(r.Stime, d.Stime)
+	r.Pvbytes = append(r.Pvbytes, d.Pvbytes)
+	r.Pgpool = append(r.Pgpool, d.Pgpool)
+}
+
+func (r *RealtimepidTsArr) GetArgs() []interface{} {
+	data := make([]interface{}, 0)
+	data = append(data, pq.Array(r.Ontunetime))
+	data = append(data, pq.Array(r.Agenttime))
+	data = append(data, pq.Array(r.Agentid))
+	data = append(data, pq.Array(r.Pid))
+	data = append(data, pq.Array(r.Ppid))
+	data = append(data, pq.Array(r.Uid))
+	data = append(data, pq.Array(r.Cmdid))
+	data = append(data, pq.Array(r.Userid))
+	data = append(data, pq.Array(r.Argid))
+	data = append(data, pq.Array(r.Usr))
+	data = append(data, pq.Array(r.Sys))
+	data = append(data, pq.Array(r.Usrsys))
+	data = append(data, pq.Array(r.Sz))
+	data = append(data, pq.Array(r.Rss))
+	data = append(data, pq.Array(r.Vmem))
+	data = append(data, pq.Array(r.Chario))
+	data = append(data, pq.Array(r.Processcnt))
+	data = append(data, pq.Array(r.Threadcnt))
+	data = append(data, pq.Array(r.Handlecnt))
+	data = append(data, pq.Array(r.Stime))
+	data = append(data, pq.Array(r.Pvbytes))
+	data = append(data, pq.Array(r.Pgpool))
+
+	return data
+}
+
 type RealtimeprocPg struct {
 	Ontunetime int64 `db:"_ontunetime"`
 	Agenttime  int   `db:"_agenttime"`
@@ -631,6 +899,67 @@ type RealtimeprocPg struct {
 	Pgpool     int   `db:"_pgpool"`
 }
 
+type RealtimeprocPgArr struct {
+	Ontunetime []int64
+	Agenttime  []int
+	Agentid    []int
+	Cmdid      []int
+	Userid     []int
+	Usr        []int
+	Sys        []int
+	Usrsys     []int
+	Sz         []int
+	Rss        []int
+	Vmem       []int
+	Chario     []int
+	Processcnt []int
+	Threadcnt  []int
+	Pvbytes    []int
+	Pgpool     []int
+}
+
+func (r *RealtimeprocPgArr) SetData(data interface{}, agenttime time.Time, agentid int, cmdid int, userid int, argid int) {
+	d := data.(AgentRealTimePIDInner)
+	r.Ontunetime = append(r.Ontunetime, agenttime.Unix())
+	r.Agenttime = append(r.Agenttime, int(agenttime.Unix()))
+	r.Agentid = append(r.Agentid, agentid)
+	r.Cmdid = append(r.Cmdid, cmdid)
+	r.Userid = append(r.Userid, userid)
+	r.Usr = append(r.Usr, d.Usr)
+	r.Sys = append(r.Sys, d.Sys)
+	r.Usrsys = append(r.Usrsys, d.Usrsys)
+	r.Sz = append(r.Sz, d.Sz)
+	r.Rss = append(r.Rss, d.Rss)
+	r.Vmem = append(r.Vmem, d.Vmem)
+	r.Chario = append(r.Chario, d.Chario)
+	r.Processcnt = append(r.Processcnt, d.Processcnt)
+	r.Threadcnt = append(r.Threadcnt, d.Threadcnt)
+	r.Pvbytes = append(r.Pvbytes, d.Pvbytes)
+	r.Pgpool = append(r.Pgpool, d.Pgpool)
+}
+
+func (r *RealtimeprocPgArr) GetArgs() []interface{} {
+	data := make([]interface{}, 0)
+	data = append(data, pq.Array(r.Ontunetime))
+	data = append(data, pq.Array(r.Agenttime))
+	data = append(data, pq.Array(r.Agentid))
+	data = append(data, pq.Array(r.Cmdid))
+	data = append(data, pq.Array(r.Userid))
+	data = append(data, pq.Array(r.Usr))
+	data = append(data, pq.Array(r.Sys))
+	data = append(data, pq.Array(r.Usrsys))
+	data = append(data, pq.Array(r.Sz))
+	data = append(data, pq.Array(r.Rss))
+	data = append(data, pq.Array(r.Vmem))
+	data = append(data, pq.Array(r.Chario))
+	data = append(data, pq.Array(r.Processcnt))
+	data = append(data, pq.Array(r.Threadcnt))
+	data = append(data, pq.Array(r.Pvbytes))
+	data = append(data, pq.Array(r.Pgpool))
+
+	return data
+}
+
 type RealtimeprocTs struct {
 	Ontunetime time.Time `db:"_ontunetime"`
 	Agenttime  int       `db:"_agenttime"`
@@ -648,6 +977,67 @@ type RealtimeprocTs struct {
 	Threadcnt  int       `db:"_threadcnt"`
 	Pvbytes    int       `db:"_pvbytes"`
 	Pgpool     int       `db:"_pgpool"`
+}
+
+type RealtimeprocTsArr struct {
+	Ontunetime []time.Time
+	Agenttime  []int
+	Agentid    []int
+	Cmdid      []int
+	Userid     []int
+	Usr        []int
+	Sys        []int
+	Usrsys     []int
+	Sz         []int
+	Rss        []int
+	Vmem       []int
+	Chario     []int
+	Processcnt []int
+	Threadcnt  []int
+	Pvbytes    []int
+	Pgpool     []int
+}
+
+func (r *RealtimeprocTsArr) SetData(data interface{}, agenttime time.Time, agentid int, cmdid int, userid int, argid int) {
+	d := data.(AgentRealTimePIDInner)
+	r.Ontunetime = append(r.Ontunetime, agenttime)
+	r.Agenttime = append(r.Agenttime, int(agenttime.Unix()))
+	r.Agentid = append(r.Agentid, agentid)
+	r.Cmdid = append(r.Cmdid, cmdid)
+	r.Userid = append(r.Userid, userid)
+	r.Usr = append(r.Usr, d.Usr)
+	r.Sys = append(r.Sys, d.Sys)
+	r.Usrsys = append(r.Usrsys, d.Usrsys)
+	r.Sz = append(r.Sz, d.Sz)
+	r.Rss = append(r.Rss, d.Rss)
+	r.Vmem = append(r.Vmem, d.Vmem)
+	r.Chario = append(r.Chario, d.Chario)
+	r.Processcnt = append(r.Processcnt, d.Processcnt)
+	r.Threadcnt = append(r.Threadcnt, d.Threadcnt)
+	r.Pvbytes = append(r.Pvbytes, d.Pvbytes)
+	r.Pgpool = append(r.Pgpool, d.Pgpool)
+}
+
+func (r *RealtimeprocTsArr) GetArgs() []interface{} {
+	data := make([]interface{}, 0)
+	data = append(data, pq.Array(r.Ontunetime))
+	data = append(data, pq.Array(r.Agenttime))
+	data = append(data, pq.Array(r.Agentid))
+	data = append(data, pq.Array(r.Cmdid))
+	data = append(data, pq.Array(r.Userid))
+	data = append(data, pq.Array(r.Usr))
+	data = append(data, pq.Array(r.Sys))
+	data = append(data, pq.Array(r.Usrsys))
+	data = append(data, pq.Array(r.Sz))
+	data = append(data, pq.Array(r.Rss))
+	data = append(data, pq.Array(r.Vmem))
+	data = append(data, pq.Array(r.Chario))
+	data = append(data, pq.Array(r.Processcnt))
+	data = append(data, pq.Array(r.Threadcnt))
+	data = append(data, pq.Array(r.Pvbytes))
+	data = append(data, pq.Array(r.Pgpool))
+
+	return data
 }
 
 type SimpleStruct struct {

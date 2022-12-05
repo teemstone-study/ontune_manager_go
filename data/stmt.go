@@ -336,7 +336,7 @@ _handlecnt int4 NULL,
 _stime int4 NULL,
 _pvbytes int4 NULL,
 _pgpool int4 NULL,
-PRIMARY KEY(_agentid, _ontunetime)
+PRIMARY KEY(_agentid, _ontunetime, _cmdid, _userid, _argid)
 )	
 WITH (	
 autovacuum_enabled=false
@@ -368,7 +368,7 @@ _processcnt int4 NULL,
 _threadcnt int4 NULL,
 _pvbytes int4 NULL,
 _pgpool int4 NULL,
-PRIMARY KEY(_agentid, _ontunetime)
+PRIMARY KEY(_agentid, _ontunetime, _cmdid, _userid)
 )	
 WITH (	
 autovacuum_enabled=false
@@ -460,4 +460,51 @@ VALUES (
 	$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,$38,$39,$40,
 	$41,$42,$43,$44,$45,$46,$47,$48,$49,$50,$51,$52,$53,$54,$55,$56,$57,$58,$59
 )
+`
+
+var InsertRealtimeCpu = `
+INSERT INTO %s
+VALUES (
+	$1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14
+)
+`
+
+var InsertSimpleTable = `
+INSERT INTO %s (_name) values ($1)
+`
+
+var InsertRealtimePidPg = `
+INSERT INTO %s
+(select * from unnest(
+	$1::int[],$2::int[],$3::int[],$4::int[],$5::int[],$6::int[],$7::int[],
+	$8::int[],$9::int[],$10::int[],$11::int[],$12::int[],$13::int[],$14::int[],
+	$15::int[],$16::int[],$17::int[],$18::int[],$19::int[],$20::int[],$21::int[],$22::int[]
+))
+`
+
+var InsertRealtimePidTs = `
+INSERT INTO %s
+(select * from unnest(
+	$1::timestamptz[],$2::int[],$3::int[],$4::int[],$5::int[],$6::int[],$7::int[],
+	$8::int[],$9::int[],$10::int[],$11::int[],$12::int[],$13::int[],$14::int[],
+	$15::int[],$16::int[],$17::int[],$18::int[],$19::int[],$20::int[],$21::int[],$22::int[]
+))
+`
+
+var InsertRealtimeProcPg = `
+INSERT INTO %s
+(select * from unnest(
+	$1::int[],$2::int[],$3::int[],$4::int[],$5::int[],$6::int[],$7::int[],
+	$8::int[],$9::int[],$10::int[],$11::int[],$12::int[],$13::int[],$14::int[],
+	$15::int[],$16::int[]
+))
+`
+
+var InsertRealtimeProcTs = `
+INSERT INTO %s
+(select * from unnest(
+	$1::timestamptz[],$2::int[],$3::int[],$4::int[],$5::int[],$6::int[],$7::int[],
+	$8::int[],$9::int[],$10::int[],$11::int[],$12::int[],$13::int[],$14::int[],
+	$15::int[],$16::int[]
+))
 `

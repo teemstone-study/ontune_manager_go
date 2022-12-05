@@ -56,7 +56,7 @@ func main() {
 			}
 		case lrtp := <-ch.Lastrealtimeperf:
 			if tcpRequestKeys.Code == app.LASTPERF_CODE {
-				bpt_json, err := json.Marshal("B")
+				bpt_json, err := json.Marshal("L")
 				if err != nil {
 					log.Println("JSON Data Conversion error")
 				}
@@ -70,6 +70,27 @@ func main() {
 				d.SetHost(cshost)
 			}
 		case csperf := <-ch.ConsumerData.Realtimeperf:
+			if tcpRequestKeys.Code == app.BASIC_CODE {
+				perf_json, err := json.Marshal("B")
+				if err != nil {
+					log.Println("JSON Data Conversion error")
+				}
+				tcpResponseData <- perf_json
+			}
+			if tcpRequestKeys.Code == app.CPU_CODE {
+				cpu_json, err := json.Marshal("C")
+				if err != nil {
+					log.Println("JSON Data Conversion error")
+				}
+				tcpResponseData <- cpu_json
+			}
+			if tcpRequestKeys.Code == app.MEM_CODE {
+				mem_json, err := json.Marshal("M")
+				if err != nil {
+					log.Println("JSON Data Conversion error")
+				}
+				tcpResponseData <- mem_json
+			}
 			for _, d := range db_handler {
 				d.SetPerf(csperf)
 			}
@@ -78,10 +99,24 @@ func main() {
 				d.SetPid(cspid)
 			}
 		case csdisk := <-ch.ConsumerData.Realtimedisk:
+			if tcpRequestKeys.Code == app.DISK_CODE {
+				disk_json, err := json.Marshal("D")
+				if err != nil {
+					log.Println("JSON Data Conversion error")
+				}
+				tcpResponseData <- disk_json
+			}
 			for _, d := range db_handler {
 				d.SetDisk(csdisk)
 			}
 		case csnet := <-ch.ConsumerData.Realtimenet:
+			if tcpRequestKeys.Code == app.NET_CODE {
+				net_json, err := json.Marshal("N")
+				if err != nil {
+					log.Println("JSON Data Conversion error")
+				}
+				tcpResponseData <- net_json
+			}
 			for _, d := range db_handler {
 				d.SetNet(csnet)
 			}
