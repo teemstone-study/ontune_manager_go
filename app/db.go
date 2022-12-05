@@ -182,7 +182,7 @@ func (d *DBHandler) DemoHostStateChange(agent_str string) {
 
 func (d *DBHandler) DemoBptUpdate(arr *data.LastrealtimeperfArr) {
 	tx := d.db.MustBegin()
-	tx.MustExec(data.DeleteLastrealtimeperf)
+	tx.MustExec(data.DeleteLastrealtimeperfAll, d.demo.HostCount)
 
 	tx.MustExec(data.DemoInsertLastrealtimeperf, arr.GetArgs()...)
 	tx.Commit()
@@ -249,7 +249,7 @@ func (d *DBHandler) SetHost(cshost *data.AgentHostAgentInfo) {
 	MemoriSize -> Memorysize
 	SwapMemory -> Swapsize
 	----------------------------*/
-	fmt.Printf("agentinfo update %s\n", cshost.AgentID)
+	//fmt.Printf("agentinfo update %s\n", cshost.AgentID)
 
 	if _, ok := d.hosts[cshost.AgentID]; ok {
 		// Already Exists
@@ -364,217 +364,202 @@ func (d *DBHandler) SetEmptyAgentinfo(agentname string) int {
 	return agentid
 }
 
-func (d *DBHandler) SetPerf(csperf *data.AgentRealTimePerf) {
-	fmt.Printf("realtimeperf update %s\n", csperf.AgentID)
-
-	// Check Agent
-	agentid := d.SetEmptyAgentinfo(csperf.AgentID)
-
-	// Insert Perf
-	fmt.Println(agentid)
-	tablename, dbtype := d.GetTableinfo("realtimeperf")
-	tablename2, _ := d.GetTableinfo("realtimecpu")
-
-	if dbtype == "pg" {
-		perf_data := data.RealtimeperfPg{}
-		perf_data.SetData(csperf, agentid)
-
-		cpu_data := data.RealtimecpuPg{}
-		cpu_data.SetData(csperf, agentid)
-
-		tx := d.db.MustBegin()
-		var err error
-		_, err = tx.Exec(fmt.Sprintf(data.InsertRealtimePerf, tablename), perf_data.GetArgs()...)
-		if err != nil {
-			log.Println(err)
-			tx.Rollback()
-			return
-		}
-		_, err = tx.Exec(fmt.Sprintf(data.InsertRealtimeCpu, tablename2), cpu_data.GetArgs()...)
-		if err != nil {
-			log.Println(err)
-			tx.Rollback()
-			return
-		}
-		tx.Commit()
-	} else {
-		perf_data := data.RealtimeperfTs{}
-		perf_data.SetData(csperf, agentid)
-
-		cpu_data := data.RealtimecpuPg{}
-		cpu_data.SetData(csperf, agentid)
-
-		tx := d.db.MustBegin()
-		var err error
-		_, err = tx.Exec(fmt.Sprintf(data.InsertRealtimePerf, tablename), perf_data.GetArgs()...)
-		if err != nil {
-			log.Println(err)
-			tx.Rollback()
-			return
-		}
-		_, err = tx.Exec(fmt.Sprintf(data.InsertRealtimeCpu, tablename2), cpu_data.GetArgs()...)
-		if err != nil {
-			log.Println(err)
-			tx.Rollback()
-			return
-		}
-		tx.Commit()
+func (d *DBHandler) SetPerfPg(csperf *data.AgentRealTimePerf, agentid int, tables ...data.Table) {
+	// Set Lastrealtimeperf
+	for _, t := range tables {
+		t.SetData(csperf, agentid)
 	}
 }
 
-func (d *DBHandler) SetPid(cspid *data.AgentRealTimePID) {
-	fmt.Printf("realtimepid update %s\n", cspid.AgentID)
+func (d *DBHandler) InsertPerfPg(lrtp *data.Lastrealtimeperf, perf *data.RealtimeperfPg, cpu *data.RealtimecpuPg, agentid int, ptb string, ctb string) {
+	var err error
+	tx := d.db.MustBegin()
 
-	// Check Agent
-	agentid := d.SetEmptyAgentinfo(cspid.AgentID)
+	tx.MustExec(data.DeleteLastrealtimeperf, agentid)
+	_, err = tx.Exec(data.InsertLastRealtimePerf, lrtp.GetArgs()...)
+	if err != nil {
+		log.Println(err)
+		tx.Rollback()
+		return
+	}
 
-	// Insert Perf
-	fmt.Println(agentid)
-	tablename, dbtype := d.GetTableinfo("realtimepid")
-	tablename2, _ := d.GetTableinfo("realtimeproc")
-	fmt.Println(tablename)
+	_, err = tx.Exec(fmt.Sprintf(data.InsertRealtimePerf, ptb), perf.GetArgs()...)
+	if err != nil {
+		log.Println(err)
+		tx.Rollback()
+		return
+	}
+	_, err = tx.Exec(fmt.Sprintf(data.InsertRealtimeCpu, ctb), cpu.GetArgs()...)
+	if err != nil {
+		log.Println(err)
+		tx.Rollback()
+		return
+	}
+	tx.Commit()
+}
 
-	if dbtype == "pg" {
-		pid_data := data.RealtimepidPgArr{}
-		proc_data := data.RealtimeprocPgArr{}
-		for _, p := range cspid.PerfList {
-			cmdid, userid, argid := d.GetProcId(&p)
-			pid_data.SetData(p, cspid.Agenttime, agentid, cmdid, userid, argid)
-			proc_data.SetData(p, cspid.Agenttime, agentid, cmdid, userid, argid)
-		}
+func (d *DBHandler) SetPerfTs(csperf *data.AgentRealTimePerf, lrtp *data.Lastrealtimeperf, perf *data.RealtimeperfTs, cpu *data.RealtimecpuTs, agentid int) {
+	// Set Lastrealtimeperf
+	lrtp.SetData(csperf, agentid)
 
-		tx := d.db.MustBegin()
-		var err error
-		_, err = tx.Exec(fmt.Sprintf(data.InsertRealtimePidPg, tablename), pid_data.GetArgs()...)
-		if err != nil {
-			log.Println(err)
-			tx.Rollback()
-			return
-		}
-		_, err = tx.Exec(fmt.Sprintf(data.InsertRealtimeProcPg, tablename2), proc_data.GetArgs()...)
-		if err != nil {
-			log.Println(err)
-			tx.Rollback()
-			return
-		}
-		tx.Commit()
-	} else {
-		pid_data := data.RealtimepidTsArr{}
-		proc_data := data.RealtimeprocTsArr{}
-		for _, p := range cspid.PerfList {
-			cmdid, userid, argid := d.GetProcId(&p)
-			pid_data.SetData(p, cspid.Agenttime, agentid, cmdid, userid, argid)
-			proc_data.SetData(p, cspid.Agenttime, agentid, cmdid, userid, argid)
-		}
+	// Set Perf
+	perf.SetData(csperf, agentid)
+	cpu.SetData(csperf, agentid)
+}
 
-		var err error
-		tx := d.db.MustBegin()
-		_, err = tx.Exec(fmt.Sprintf(data.InsertRealtimePidTs, tablename), pid_data.GetArgs()...)
-		if err != nil {
-			log.Println(err)
-			tx.Rollback()
-			return
-		}
-		_, err = tx.Exec(fmt.Sprintf(data.InsertRealtimeProcTs, tablename2), proc_data.GetArgs()...)
-		if err != nil {
-			log.Println(err)
-			tx.Rollback()
-			return
-		}
-		tx.Commit()
+func (d *DBHandler) InsertPerfTs(lrtp *data.Lastrealtimeperf, perf *data.RealtimeperfTs, cpu *data.RealtimecpuTs, agentid int, ptb string, ctb string) {
+	var err error
+	tx := d.db.MustBegin()
+
+	tx.MustExec(data.DeleteLastrealtimeperf, agentid)
+	_, err = tx.Exec(data.InsertLastRealtimePerf, lrtp.GetArgs()...)
+	if err != nil {
+		log.Println(err)
+		tx.Rollback()
+		return
+	}
+	_, err = tx.Exec(fmt.Sprintf(data.InsertRealtimePerf, ptb), perf.GetArgs()...)
+	if err != nil {
+		log.Println(err)
+		tx.Rollback()
+		return
+	}
+	_, err = tx.Exec(fmt.Sprintf(data.InsertRealtimeCpu, ctb), cpu.GetArgs()...)
+	if err != nil {
+		log.Println(err)
+		tx.Rollback()
+		return
+	}
+	tx.Commit()
+}
+
+func (d *DBHandler) SetPidPg(cspid *data.AgentRealTimePID, pid *data.RealtimepidPgArr, proc *data.RealtimeprocPgArr, agentid int) {
+	for _, p := range cspid.PerfList {
+		cmdid, userid, argid := d.GetProcId(&p)
+		pid.SetData(p, cspid.Agenttime, agentid, cmdid, userid, argid)
+		proc.SetData(p, cspid.Agenttime, agentid, cmdid, userid, argid)
 	}
 }
 
-func (d *DBHandler) SetDisk(csdisk *data.AgentRealTimeDisk) {
-	fmt.Printf("realtimedisk update %s\n", csdisk.AgentID)
+func (d *DBHandler) InsertPidPg(pid *data.RealtimepidPgArr, proc *data.RealtimeprocPgArr, pitb string, prtb string) {
+	var err error
+	tx := d.db.MustBegin()
 
-	// Check Agent
-	agentid := d.SetEmptyAgentinfo(csdisk.AgentID)
+	_, err = tx.Exec(fmt.Sprintf(data.InsertRealtimePidPg, pitb), pid.GetArgs()...)
+	if err != nil {
+		log.Println(err)
+		tx.Rollback()
+		return
+	}
+	_, err = tx.Exec(fmt.Sprintf(data.InsertRealtimeProcPg, prtb), proc.GetArgs()...)
+	if err != nil {
+		log.Println(err)
+		tx.Rollback()
+		return
+	}
+	tx.Commit()
+}
 
-	// Insert Perf
-	fmt.Println(agentid)
-	tablename, dbtype := d.GetTableinfo("realtimedisk")
-	fmt.Println(tablename)
-
-	if dbtype == "pg" {
-		disk_data := data.RealtimediskPgArr{}
-		for _, p := range csdisk.PerfList {
-			ionameid, descid := d.GetDeviceId(p.Ioname, p.Descname)
-			disk_data.SetData(p, csdisk.Agenttime, agentid, ionameid, descid)
-		}
-
-		tx := d.db.MustBegin()
-		var err error
-		_, err = tx.Exec(fmt.Sprintf(data.InsertRealtimeDiskPg, tablename), disk_data.GetArgs()...)
-		if err != nil {
-			log.Println(err)
-			tx.Rollback()
-			return
-		}
-		tx.Commit()
-	} else {
-		disk_data := data.RealtimediskTsArr{}
-		for _, p := range csdisk.PerfList {
-			ionameid, descid := d.GetDeviceId(p.Ioname, p.Descname)
-			disk_data.SetData(p, csdisk.Agenttime, agentid, ionameid, descid)
-		}
-
-		var err error
-		tx := d.db.MustBegin()
-		_, err = tx.Exec(fmt.Sprintf(data.InsertRealtimeDiskTs, tablename), disk_data.GetArgs()...)
-		if err != nil {
-			log.Println(err)
-			tx.Rollback()
-			return
-		}
-		tx.Commit()
+func (d *DBHandler) SetPidTs(cspid *data.AgentRealTimePID, pid *data.RealtimepidTsArr, proc *data.RealtimeprocTsArr, agentid int) {
+	for _, p := range cspid.PerfList {
+		cmdid, userid, argid := d.GetProcId(&p)
+		pid.SetData(p, cspid.Agenttime, agentid, cmdid, userid, argid)
+		proc.SetData(p, cspid.Agenttime, agentid, cmdid, userid, argid)
 	}
 }
 
-func (d *DBHandler) SetNet(csnet *data.AgentRealTimeNet) {
-	fmt.Printf("realtimedisk update %s\n", csnet.AgentID)
-
-	// Check Agent
-	agentid := d.SetEmptyAgentinfo(csnet.AgentID)
-
-	// Insert Perf
-	fmt.Println(agentid)
-	tablename, dbtype := d.GetTableinfo("realtimenet")
-	fmt.Println(tablename)
-
-	if dbtype == "pg" {
-		net_data := data.RealtimenetPgArr{}
-		for _, p := range csnet.PerfList {
-			ionameid, _ := d.GetDeviceId(p.Ioname, "")
-			net_data.SetData(p, csnet.Agenttime, agentid, ionameid)
-		}
-
-		tx := d.db.MustBegin()
-		var err error
-		_, err = tx.Exec(fmt.Sprintf(data.InsertRealtimeNetPg, tablename), net_data.GetArgs()...)
-		if err != nil {
-			log.Println(err)
-			tx.Rollback()
-			return
-		}
-		tx.Commit()
-	} else {
-		net_data := data.RealtimenetTsArr{}
-		for _, p := range csnet.PerfList {
-			ionameid, _ := d.GetDeviceId(p.Ioname, "")
-			net_data.SetData(p, csnet.Agenttime, agentid, ionameid)
-		}
-
-		var err error
-		tx := d.db.MustBegin()
-		_, err = tx.Exec(fmt.Sprintf(data.InsertRealtimeNetTs, tablename), net_data.GetArgs()...)
-		if err != nil {
-			log.Println(err)
-			tx.Rollback()
-			return
-		}
-		tx.Commit()
+func (d *DBHandler) InsertPidTs(pid *data.RealtimepidTsArr, proc *data.RealtimeprocTsArr, pitb string, prtb string) {
+	var err error
+	tx := d.db.MustBegin()
+	_, err = tx.Exec(fmt.Sprintf(data.InsertRealtimePidTs, pitb), pid.GetArgs()...)
+	if err != nil {
+		log.Println(err)
+		tx.Rollback()
+		return
 	}
+	_, err = tx.Exec(fmt.Sprintf(data.InsertRealtimeProcTs, prtb), proc.GetArgs()...)
+	if err != nil {
+		log.Println(err)
+		tx.Rollback()
+		return
+	}
+	tx.Commit()
+}
+
+func (d *DBHandler) SetDiskPg(csdisk *data.AgentRealTimeDisk, disk *data.RealtimediskPgArr, agentid int) {
+	for _, p := range csdisk.PerfList {
+		ionameid, descid := d.GetDeviceId(p.Ioname, p.Descname)
+		disk.SetData(p, csdisk.Agenttime, agentid, ionameid, descid)
+	}
+}
+
+func (d *DBHandler) SetDiskTs(csdisk *data.AgentRealTimeDisk, disk *data.RealtimediskTsArr, agentid int) {
+	for _, p := range csdisk.PerfList {
+		ionameid, descid := d.GetDeviceId(p.Ioname, p.Descname)
+		disk.SetData(p, csdisk.Agenttime, agentid, ionameid, descid)
+	}
+}
+
+func (d *DBHandler) InsertDiskPg(disk *data.RealtimediskPgArr, tablename string) {
+	tx := d.db.MustBegin()
+	var err error
+	_, err = tx.Exec(fmt.Sprintf(data.InsertRealtimeDiskPg, tablename), disk.GetArgs()...)
+	if err != nil {
+		log.Println(err)
+		tx.Rollback()
+		return
+	}
+	tx.Commit()
+}
+
+func (d *DBHandler) InsertDiskTs(disk *data.RealtimediskTsArr, tablename string) {
+	var err error
+	tx := d.db.MustBegin()
+	_, err = tx.Exec(fmt.Sprintf(data.InsertRealtimeDiskTs, tablename), disk.GetArgs()...)
+	if err != nil {
+		log.Println(err)
+		tx.Rollback()
+		return
+	}
+	tx.Commit()
+}
+
+func (d *DBHandler) SetNetPg(csnet *data.AgentRealTimeNet, net *data.RealtimenetPgArr, agentid int) {
+	for _, p := range csnet.PerfList {
+		ionameid, _ := d.GetDeviceId(p.Ioname, "")
+		net.SetData(p, csnet.Agenttime, agentid, ionameid)
+	}
+}
+
+func (d *DBHandler) InsertNetPg(net *data.RealtimenetPgArr, tablename string) {
+	tx := d.db.MustBegin()
+	var err error
+	_, err = tx.Exec(fmt.Sprintf(data.InsertRealtimeNetPg, tablename), net.GetArgs()...)
+	if err != nil {
+		log.Println(err)
+		tx.Rollback()
+		return
+	}
+	tx.Commit()
+}
+
+func (d *DBHandler) SetNetTs(csnet *data.AgentRealTimeNet, net *data.RealtimenetTsArr, agentid int) {
+	for _, p := range csnet.PerfList {
+		ionameid, _ := d.GetDeviceId(p.Ioname, "")
+		net.SetData(p, csnet.Agenttime, agentid, ionameid)
+	}
+}
+
+func (d *DBHandler) InsertNetTs(net *data.RealtimenetTsArr, tablename string) {
+	var err error
+	tx := d.db.MustBegin()
+	_, err = tx.Exec(fmt.Sprintf(data.InsertRealtimeNetTs, tablename), net.GetArgs()...)
+	if err != nil {
+		log.Println(err)
+		tx.Rollback()
+		return
+	}
+	tx.Commit()
 }
 
 func (d *DBHandler) GetProcId(cspidinner *data.AgentRealTimePIDInner) (int, int, int) {
