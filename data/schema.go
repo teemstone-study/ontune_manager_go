@@ -632,6 +632,52 @@ type RealtimediskPg struct {
 	Writesvctime int   `db:"_writesvctime"`
 }
 
+type RealtimediskPgArr struct {
+	Ontunetime   []int64
+	Agenttime    []int
+	Agentid      []int
+	Ionameid     []int
+	Readrate     []int
+	Writerate    []int
+	Iops         []int
+	Busy         []int
+	Descid       []int
+	Readsvctime  []int
+	Writesvctime []int
+}
+
+func (r *RealtimediskPgArr) SetData(data interface{}, agenttime time.Time, agentid int, ioid int, descid int) {
+	d := data.(AgentRealTimeDiskInner)
+	r.Ontunetime = append(r.Ontunetime, agenttime.Unix())
+	r.Agenttime = append(r.Agenttime, int(agenttime.Unix()))
+	r.Agentid = append(r.Agentid, agentid)
+	r.Ionameid = append(r.Ionameid, ioid)
+	r.Readrate = append(r.Readrate, d.Readrate)
+	r.Writerate = append(r.Writerate, d.Writerate)
+	r.Iops = append(r.Iops, d.Iops)
+	r.Busy = append(r.Busy, d.Busy)
+	r.Descid = append(r.Descid, descid)
+	r.Readsvctime = append(r.Readsvctime, d.Readsvctime)
+	r.Writesvctime = append(r.Writesvctime, d.Writesvctime)
+}
+
+func (r *RealtimediskPgArr) GetArgs() []interface{} {
+	data := make([]interface{}, 0)
+	data = append(data, pq.Array(r.Ontunetime))
+	data = append(data, pq.Array(r.Agenttime))
+	data = append(data, pq.Array(r.Agentid))
+	data = append(data, pq.Array(r.Ionameid))
+	data = append(data, pq.Array(r.Readrate))
+	data = append(data, pq.Array(r.Writerate))
+	data = append(data, pq.Array(r.Iops))
+	data = append(data, pq.Array(r.Busy))
+	data = append(data, pq.Array(r.Descid))
+	data = append(data, pq.Array(r.Readsvctime))
+	data = append(data, pq.Array(r.Writesvctime))
+
+	return data
+}
+
 type RealtimediskTs struct {
 	Ontunetime   time.Time `db:"_ontunetime"`
 	Agenttime    int       `db:"_agenttime"`
@@ -644,6 +690,52 @@ type RealtimediskTs struct {
 	Descid       int       `db:"_descid"`
 	Readsvctime  int       `db:"_readsvctime"`
 	Writesvctime int       `db:"_writesvctime"`
+}
+
+type RealtimediskTsArr struct {
+	Ontunetime   []time.Time
+	Agenttime    []int
+	Agentid      []int
+	Ionameid     []int
+	Readrate     []int
+	Writerate    []int
+	Iops         []int
+	Busy         []int
+	Descid       []int
+	Readsvctime  []int
+	Writesvctime []int
+}
+
+func (r *RealtimediskTsArr) SetData(data interface{}, agenttime time.Time, agentid int, ioid int, descid int) {
+	d := data.(AgentRealTimeDiskInner)
+	r.Ontunetime = append(r.Ontunetime, agenttime)
+	r.Agenttime = append(r.Agenttime, int(agenttime.Unix()))
+	r.Agentid = append(r.Agentid, agentid)
+	r.Ionameid = append(r.Ionameid, ioid)
+	r.Readrate = append(r.Readrate, d.Readrate)
+	r.Writerate = append(r.Writerate, d.Writerate)
+	r.Iops = append(r.Iops, d.Iops)
+	r.Busy = append(r.Busy, d.Busy)
+	r.Descid = append(r.Descid, descid)
+	r.Readsvctime = append(r.Readsvctime, d.Readsvctime)
+	r.Writesvctime = append(r.Writesvctime, d.Writesvctime)
+}
+
+func (r *RealtimediskTsArr) GetArgs() []interface{} {
+	data := make([]interface{}, 0)
+	data = append(data, pq.Array(r.Ontunetime))
+	data = append(data, pq.Array(r.Agenttime))
+	data = append(data, pq.Array(r.Agentid))
+	data = append(data, pq.Array(r.Ionameid))
+	data = append(data, pq.Array(r.Readrate))
+	data = append(data, pq.Array(r.Writerate))
+	data = append(data, pq.Array(r.Iops))
+	data = append(data, pq.Array(r.Busy))
+	data = append(data, pq.Array(r.Descid))
+	data = append(data, pq.Array(r.Readsvctime))
+	data = append(data, pq.Array(r.Writesvctime))
+
+	return data
 }
 
 type RealtimenetPg struct {
@@ -659,6 +751,49 @@ type RealtimenetPg struct {
 	Collision  int   `db:"_collision"`
 }
 
+type RealtimenetPgArr struct {
+	Ontunetime []int64
+	Agenttime  []int
+	Agentid    []int
+	Ionameid   []int
+	Readrate   []int
+	Writerate  []int
+	Readiops   []int
+	Writeiops  []int
+	Errorps    []int
+	Collision  []int
+}
+
+func (r *RealtimenetPgArr) SetData(data interface{}, agenttime time.Time, agentid int, ioid int) {
+	d := data.(AgentRealTimeNetInner)
+	r.Ontunetime = append(r.Ontunetime, agenttime.Unix())
+	r.Agenttime = append(r.Agenttime, int(agenttime.Unix()))
+	r.Agentid = append(r.Agentid, agentid)
+	r.Ionameid = append(r.Ionameid, ioid)
+	r.Readrate = append(r.Readrate, d.Readrate)
+	r.Writerate = append(r.Writerate, d.Writerate)
+	r.Readiops = append(r.Readiops, d.Readiops)
+	r.Writeiops = append(r.Writeiops, d.Writeiops)
+	r.Errorps = append(r.Errorps, d.Errorps)
+	r.Collision = append(r.Collision, d.Collision)
+}
+
+func (r *RealtimenetPgArr) GetArgs() []interface{} {
+	data := make([]interface{}, 0)
+	data = append(data, pq.Array(r.Ontunetime))
+	data = append(data, pq.Array(r.Agenttime))
+	data = append(data, pq.Array(r.Agentid))
+	data = append(data, pq.Array(r.Ionameid))
+	data = append(data, pq.Array(r.Readrate))
+	data = append(data, pq.Array(r.Writerate))
+	data = append(data, pq.Array(r.Readiops))
+	data = append(data, pq.Array(r.Writeiops))
+	data = append(data, pq.Array(r.Errorps))
+	data = append(data, pq.Array(r.Collision))
+
+	return data
+}
+
 type RealtimenetTs struct {
 	Ontunetime time.Time `db:"_ontunetime"`
 	Agenttime  int       `db:"_agenttime"`
@@ -670,6 +805,49 @@ type RealtimenetTs struct {
 	Writeiops  int       `db:"_writeiops"`
 	Errorps    int       `db:"_errorps"`
 	Collision  int       `db:"_collision"`
+}
+
+type RealtimenetTsArr struct {
+	Ontunetime []time.Time
+	Agenttime  []int
+	Agentid    []int
+	Ionameid   []int
+	Readrate   []int
+	Writerate  []int
+	Readiops   []int
+	Writeiops  []int
+	Errorps    []int
+	Collision  []int
+}
+
+func (r *RealtimenetTsArr) SetData(data interface{}, agenttime time.Time, agentid int, ioid int) {
+	d := data.(AgentRealTimeNetInner)
+	r.Ontunetime = append(r.Ontunetime, agenttime)
+	r.Agenttime = append(r.Agenttime, int(agenttime.Unix()))
+	r.Agentid = append(r.Agentid, agentid)
+	r.Ionameid = append(r.Ionameid, ioid)
+	r.Readrate = append(r.Readrate, d.Readrate)
+	r.Writerate = append(r.Writerate, d.Writerate)
+	r.Readiops = append(r.Readiops, d.Readiops)
+	r.Writeiops = append(r.Writeiops, d.Writeiops)
+	r.Errorps = append(r.Errorps, d.Errorps)
+	r.Collision = append(r.Collision, d.Collision)
+}
+
+func (r *RealtimenetTsArr) GetArgs() []interface{} {
+	data := make([]interface{}, 0)
+	data = append(data, pq.Array(r.Ontunetime))
+	data = append(data, pq.Array(r.Agenttime))
+	data = append(data, pq.Array(r.Agentid))
+	data = append(data, pq.Array(r.Ionameid))
+	data = append(data, pq.Array(r.Readrate))
+	data = append(data, pq.Array(r.Writerate))
+	data = append(data, pq.Array(r.Readiops))
+	data = append(data, pq.Array(r.Writeiops))
+	data = append(data, pq.Array(r.Errorps))
+	data = append(data, pq.Array(r.Collision))
+
+	return data
 }
 
 type RealtimepidPg struct {

@@ -278,20 +278,17 @@ func (d *DBHandler) SetHostinfo(new_agent *data.AgentHostAgentInfo) int {
 	return new_agentid
 }
 
-func (d *DBHandler) SetPerf(csperf *data.AgentRealTimePerf) {
-	fmt.Printf("realtimeperf update %s\n", csperf.AgentID)
+func (d *DBHandler) SetEmptyAgentinfo(agentname string) int {
 	var agentid int
-
-	// Check Agent
-	if _, ok := d.hosts[csperf.AgentID]; ok {
-		agentid = d.hosts[csperf.AgentID]
+	if _, ok := d.hosts[agentname]; ok {
+		agentid = d.hosts[agentname]
 	} else {
 		// Agent 정보보다 Perf 정보가 먼저 들어올 때 미존재하는 Agent면 Error 발생 가능성이 있으므로, Agent 정보를 먼저 구성해야 함
 		// Agent 정보는 AgentID만 넘기고 나머지는 빈 정보로 구성
 		// 어차피 Consumer Agent 정보가 들어오면 이미 존재하는 AgentID이므로 업데이트됨
 		agentid = d.SetHostinfo(&data.AgentHostAgentInfo{
-			AgentName:    csperf.AgentID,
-			AgentID:      csperf.AgentID,
+			AgentName:    agentname,
+			AgentID:      agentname,
 			Model:        "",
 			Serial:       "",
 			Ip:           "",
@@ -303,6 +300,15 @@ func (d *DBHandler) SetPerf(csperf *data.AgentRealTimePerf) {
 			SwapMemory:   0,
 		})
 	}
+
+	return agentid
+}
+
+func (d *DBHandler) SetPerf(csperf *data.AgentRealTimePerf) {
+	fmt.Printf("realtimeperf update %s\n", csperf.AgentID)
+
+	// Check Agent
+	agentid := d.SetEmptyAgentinfo(csperf.AgentID)
 
 	// Insert Perf
 	fmt.Println(agentid)
@@ -357,30 +363,10 @@ func (d *DBHandler) SetPerf(csperf *data.AgentRealTimePerf) {
 }
 
 func (d *DBHandler) SetPid(cspid *data.AgentRealTimePID) {
-	fmt.Printf("realtimeperf update %s\n", cspid.AgentID)
-	var agentid int
+	fmt.Printf("realtimepid update %s\n", cspid.AgentID)
 
 	// Check Agent
-	if _, ok := d.hosts[cspid.AgentID]; ok {
-		agentid = d.hosts[cspid.AgentID]
-	} else {
-		// Agent 정보보다 Perf 정보가 먼저 들어올 때 미존재하는 Agent면 Error 발생 가능성이 있으므로, Agent 정보를 먼저 구성해야 함
-		// Agent 정보는 AgentID만 넘기고 나머지는 빈 정보로 구성
-		// 어차피 Consumer Agent 정보가 들어오면 이미 존재하는 AgentID이므로 업데이트됨
-		agentid = d.SetHostinfo(&data.AgentHostAgentInfo{
-			AgentName:    cspid.AgentID,
-			AgentID:      cspid.AgentID,
-			Model:        "",
-			Serial:       "",
-			Ip:           "",
-			Os:           "",
-			Agentversion: "",
-			ProcessCount: 0,
-			ProcessClock: 0,
-			MemorySize:   0,
-			SwapMemory:   0,
-		})
-	}
+	agentid := d.SetEmptyAgentinfo(cspid.AgentID)
 
 	// Insert Perf
 	fmt.Println(agentid)
@@ -392,7 +378,7 @@ func (d *DBHandler) SetPid(cspid *data.AgentRealTimePID) {
 		pid_data := data.RealtimepidPgArr{}
 		proc_data := data.RealtimeprocPgArr{}
 		for _, p := range cspid.PerfList {
-			cmdid, userid, argid := d.GetProcid(&p)
+			cmdid, userid, argid := d.GetProcId(&p)
 			pid_data.SetData(p, cspid.Agenttime, agentid, cmdid, userid, argid)
 			proc_data.SetData(p, cspid.Agenttime, agentid, cmdid, userid, argid)
 		}
@@ -416,7 +402,7 @@ func (d *DBHandler) SetPid(cspid *data.AgentRealTimePID) {
 		pid_data := data.RealtimepidTsArr{}
 		proc_data := data.RealtimeprocTsArr{}
 		for _, p := range cspid.PerfList {
-			cmdid, userid, argid := d.GetProcid(&p)
+			cmdid, userid, argid := d.GetProcId(&p)
 			pid_data.SetData(p, cspid.Agenttime, agentid, cmdid, userid, argid)
 			proc_data.SetData(p, cspid.Agenttime, agentid, cmdid, userid, argid)
 		}
@@ -439,7 +425,7 @@ func (d *DBHandler) SetPid(cspid *data.AgentRealTimePID) {
 	}
 }
 
-func (d *DBHandler) GetProcid(cspidinner *data.AgentRealTimePIDInner) (int, int, int) {
+func (d *DBHandler) GetProcId(cspidinner *data.AgentRealTimePIDInner) (int, int, int) {
 	var tablename string
 	var err error
 
@@ -488,12 +474,133 @@ func (d *DBHandler) GetProcid(cspidinner *data.AgentRealTimePIDInner) (int, int,
 	return cmdid, userid, argid
 }
 
-func (d *DBHandler) SetDisk(csperf *data.AgentRealTimeDisk) {
+func (d *DBHandler) SetDisk(csdisk *data.AgentRealTimeDisk) {
+	fmt.Printf("realtimedisk update %s\n", csdisk.AgentID)
 
+	// Check Agent
+	agentid := d.SetEmptyAgentinfo(csdisk.AgentID)
+
+	// Insert Perf
+	fmt.Println(agentid)
+	tablename, dbtype := d.GetTableinfo("realtimedisk")
+	fmt.Println(tablename)
+
+	if dbtype == "pg" {
+		disk_data := data.RealtimediskPgArr{}
+		for _, p := range csdisk.PerfList {
+			ionameid, descid := d.GetDeviceId(p.Ioname, p.Descname)
+			disk_data.SetData(p, csdisk.Agenttime, agentid, ionameid, descid)
+		}
+
+		tx := d.db.MustBegin()
+		var err error
+		_, err = tx.Exec(fmt.Sprintf(data.InsertRealtimeDiskPg, tablename), disk_data.GetArgs()...)
+		if err != nil {
+			log.Println(err)
+			tx.Rollback()
+			return
+		}
+		tx.Commit()
+	} else {
+		disk_data := data.RealtimediskTsArr{}
+		for _, p := range csdisk.PerfList {
+			ionameid, descid := d.GetDeviceId(p.Ioname, p.Descname)
+			disk_data.SetData(p, csdisk.Agenttime, agentid, ionameid, descid)
+		}
+
+		var err error
+		tx := d.db.MustBegin()
+		_, err = tx.Exec(fmt.Sprintf(data.InsertRealtimeDiskTs, tablename), disk_data.GetArgs()...)
+		if err != nil {
+			log.Println(err)
+			tx.Rollback()
+			return
+		}
+		tx.Commit()
+	}
 }
 
-func (d *DBHandler) SetNet(csperf *data.AgentRealTimeNet) {
+func (d *DBHandler) SetNet(csnet *data.AgentRealTimeNet) {
+	fmt.Printf("realtimedisk update %s\n", csnet.AgentID)
 
+	// Check Agent
+	agentid := d.SetEmptyAgentinfo(csnet.AgentID)
+
+	// Insert Perf
+	fmt.Println(agentid)
+	tablename, dbtype := d.GetTableinfo("realtimenet")
+	fmt.Println(tablename)
+
+	if dbtype == "pg" {
+		net_data := data.RealtimenetPgArr{}
+		for _, p := range csnet.PerfList {
+			ionameid, _ := d.GetDeviceId(p.Ioname, "")
+			net_data.SetData(p, csnet.Agenttime, agentid, ionameid)
+		}
+
+		tx := d.db.MustBegin()
+		var err error
+		_, err = tx.Exec(fmt.Sprintf(data.InsertRealtimeNetPg, tablename), net_data.GetArgs()...)
+		if err != nil {
+			log.Println(err)
+			tx.Rollback()
+			return
+		}
+		tx.Commit()
+	} else {
+		net_data := data.RealtimenetTsArr{}
+		for _, p := range csnet.PerfList {
+			ionameid, _ := d.GetDeviceId(p.Ioname, "")
+			net_data.SetData(p, csnet.Agenttime, agentid, ionameid)
+		}
+
+		var err error
+		tx := d.db.MustBegin()
+		_, err = tx.Exec(fmt.Sprintf(data.InsertRealtimeNetTs, tablename), net_data.GetArgs()...)
+		if err != nil {
+			log.Println(err)
+			tx.Rollback()
+			return
+		}
+		tx.Commit()
+	}
+}
+
+func (d *DBHandler) GetDeviceId(ioname string, descname string) (int, int) {
+	var tablename string
+	var err error
+
+	var ioid int
+	tablename, _ = d.GetTableinfo("deviceid")
+	err = d.db.QueryRow(fmt.Sprintf("SELECT _id FROM %s where _name=$1", tablename), ioname).Scan(&ioid)
+	if err != nil {
+		tx := d.db.MustBegin()
+		tx.MustExec(fmt.Sprintf(data.InsertSimpleTable, tablename), ioname)
+		tx.Commit()
+
+		err := d.db.QueryRow(fmt.Sprintf("SELECT _id FROM %s where _name=$1", tablename), ioname).Scan(&ioid)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	var descid int
+	if descname != "" {
+		tablename, _ = d.GetTableinfo("descid")
+		err = d.db.QueryRow(fmt.Sprintf("SELECT _id FROM %s where _name=$1", tablename), descname).Scan(&descid)
+		if err != nil {
+			tx := d.db.MustBegin()
+			tx.MustExec(fmt.Sprintf(data.InsertSimpleTable, tablename), descname)
+			tx.Commit()
+
+			err := d.db.QueryRow(fmt.Sprintf("SELECT _id FROM %s where _name=$1", tablename), descname).Scan(&descid)
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
+	}
+
+	return ioid, descid
 }
 
 func (d *DBHandler) GetTableinfo(tablename string) (string, string) {

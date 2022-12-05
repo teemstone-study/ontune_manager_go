@@ -508,3 +508,35 @@ INSERT INTO %s
 	$15::int[],$16::int[]
 ))
 `
+
+var InsertRealtimeDiskPg = `
+INSERT INTO %s
+(select * from unnest(
+	$1::int[],$2::int[],$3::int[],$4::int[],$5::int[],$6::int[],$7::int[],
+	$8::int[],$9::int[],$10::int[],$11::int[]
+))
+`
+
+var InsertRealtimeDiskTs = `
+INSERT INTO %s
+(select * from unnest(
+	$1::timestamptz[],$2::int[],$3::int[],$4::int[],$5::int[],$6::int[],$7::int[],
+	$8::int[],$9::int[],$10::int[],$11::int[]
+))
+`
+
+var InsertRealtimeNetPg = `
+INSERT INTO %s
+(select * from unnest(
+	$1::int[],$2::int[],$3::int[],$4::int[],$5::int[],$6::int[],$7::int[],
+	$8::int[],$9::int[],$10::int[]
+))
+`
+
+var InsertRealtimeNetTs = `
+INSERT INTO %s
+(select * from unnest(
+	$1::timestamptz[],$2::int[],$3::int[],$4::int[],$5::int[],$6::int[],$7::int[],
+	$8::int[],$9::int[],$10::int[]
+))
+`
