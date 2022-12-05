@@ -540,3 +540,7 @@ INSERT INTO %s
 	$8::int[],$9::int[],$10::int[]
 ))
 `
+
+var InsertPrevData = `
+INSERT INTO %s (select * from %s)
+`

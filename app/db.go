@@ -12,10 +12,13 @@ import (
 )
 
 type DBHandler struct {
-	name  string
-	db    *sqlx.DB
-	demo  DemoInfo
-	hosts map[string]int
+	name            string
+	db              *sqlx.DB
+	demo            DemoInfo
+	hosts           map[string]int
+	ids             map[string]map[string]int
+	metric_ref_flag string
+	metric_flag     string
 }
 
 var (
@@ -25,6 +28,12 @@ var (
 )
 
 func (d *DBHandler) CheckTable() {
+	d.CheckTableInfo()
+	d.CheckTableMetricref()
+	d.CheckTableMetric()
+}
+
+func (d *DBHandler) CheckTableInfo() {
 	// Info Table Check
 	for _, tb := range info_tables {
 		var exist_count int
@@ -51,7 +60,9 @@ func (d *DBHandler) CheckTable() {
 			tx.Commit()
 		}
 	}
+}
 
+func (d *DBHandler) CheckTableMetricref() {
 	// Metric Reference Table Check
 	for _, tb := range metric_ref_tables {
 		tablename := d.GetTablename("metric_ref", tb)
@@ -69,7 +80,9 @@ func (d *DBHandler) CheckTable() {
 			tx.Commit()
 		}
 	}
+}
 
+func (d *DBHandler) CheckTableMetric() {
 	// Metric Table Check
 	for _, tb := range metric_tables {
 		tablename := d.GetTablename("metric", tb)
@@ -115,6 +128,29 @@ func (d *DBHandler) CheckTable() {
 			}
 			tx.MustExec(data.InsertTableinfo, tablename, time.Now().Unix())
 			tx.Commit()
+		}
+	}
+}
+
+func (d *DBHandler) CheckTableInterval() {
+	ticker := time.NewTicker(time.Second * 1)
+	for range ticker.C {
+		aftertime := time.Now().Add(1 * time.Second)
+		metric_ref := d.GetTableFlag(aftertime, "metric_ref", metric_ref_tables[0])
+		if metric_ref != d.metric_ref_flag {
+			d.CheckTableMetricref()
+
+			// 현재 테이블의 값을 이후 테이블로 복사
+			tx := d.db.MustBegin()
+			for _, s := range metric_ref_tables {
+				tx.MustExec(fmt.Sprintf(data.InsertPrevData, d.GetCustomTablename(aftertime, s), d.GetTablename("metric_ref", s)))
+			}
+			tx.Commit()
+		}
+
+		metric := d.GetTableFlag(time.Now().Add(1*time.Second), "metric", metric_tables[0])
+		if metric != d.metric_flag {
+			d.CheckTableMetric()
 		}
 	}
 }
@@ -173,6 +209,30 @@ func (d *DBHandler) GetHostnames() map[string]int {
 	}
 
 	return hostnames
+}
+
+func (d *DBHandler) GetNames(tb string) map[string]int {
+	names := make(map[string]int, 0)
+	tablename, _ := d.GetTableinfo(tb)
+
+	rows, err := d.db.Query(fmt.Sprintf("SELECT _id, _name FROM %s", tablename))
+	if err != nil {
+		log.Fatal()
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var id int
+		var name string
+		err := rows.Scan(&id, &name)
+		if err != nil {
+			log.Println("Query Error")
+			return names
+		}
+		names[name] = id
+	}
+
+	return names
 }
 
 func (d *DBHandler) SetHost(cshost *data.AgentHostAgentInfo) {
@@ -425,55 +485,6 @@ func (d *DBHandler) SetPid(cspid *data.AgentRealTimePID) {
 	}
 }
 
-func (d *DBHandler) GetProcId(cspidinner *data.AgentRealTimePIDInner) (int, int, int) {
-	var tablename string
-	var err error
-
-	var cmdid int
-	tablename, _ = d.GetTableinfo("proccmd")
-	err = d.db.QueryRow(fmt.Sprintf("SELECT _id FROM %s where _name=$1", tablename), cspidinner.Cmdname).Scan(&cmdid)
-	if err != nil {
-		tx := d.db.MustBegin()
-		tx.MustExec(fmt.Sprintf(data.InsertSimpleTable, tablename), cspidinner.Cmdname)
-		tx.Commit()
-
-		err := d.db.QueryRow(fmt.Sprintf("SELECT _id FROM %s where _name=$1", tablename), cspidinner.Cmdname).Scan(&cmdid)
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
-
-	var userid int
-	tablename, _ = d.GetTableinfo("procuserid")
-	err = d.db.QueryRow(fmt.Sprintf("SELECT _id FROM %s where _name=$1", tablename), cspidinner.Username).Scan(&userid)
-	if err != nil {
-		tx := d.db.MustBegin()
-		tx.MustExec(fmt.Sprintf(data.InsertSimpleTable, tablename), cspidinner.Username)
-		tx.Commit()
-
-		err := d.db.QueryRow(fmt.Sprintf("SELECT _id FROM %s where _name=$1", tablename), cspidinner.Username).Scan(&userid)
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
-
-	var argid int
-	tablename, _ = d.GetTableinfo("procargid")
-	err = d.db.QueryRow(fmt.Sprintf("SELECT _id FROM %s where _name=$1", tablename), cspidinner.Argname).Scan(&argid)
-	if err != nil {
-		tx := d.db.MustBegin()
-		tx.MustExec(fmt.Sprintf(data.InsertSimpleTable, tablename), cspidinner.Argname)
-		tx.Commit()
-
-		err := d.db.QueryRow(fmt.Sprintf("SELECT _id FROM %s where _name=$1", tablename), cspidinner.Argname).Scan(&argid)
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
-
-	return cmdid, userid, argid
-}
-
 func (d *DBHandler) SetDisk(csdisk *data.AgentRealTimeDisk) {
 	fmt.Printf("realtimedisk update %s\n", csdisk.AgentID)
 
@@ -566,41 +577,41 @@ func (d *DBHandler) SetNet(csnet *data.AgentRealTimeNet) {
 	}
 }
 
-func (d *DBHandler) GetDeviceId(ioname string, descname string) (int, int) {
-	var tablename string
-	var err error
+func (d *DBHandler) GetProcId(cspidinner *data.AgentRealTimePIDInner) (int, int, int) {
+	cmdid := d.GetId(cspidinner.Cmdname, "proccmd")
+	userid := d.GetId(cspidinner.Username, "procuserid")
+	argid := d.GetId(cspidinner.Argname, "procargid")
 
-	var ioid int
-	tablename, _ = d.GetTableinfo("deviceid")
-	err = d.db.QueryRow(fmt.Sprintf("SELECT _id FROM %s where _name=$1", tablename), ioname).Scan(&ioid)
-	if err != nil {
+	return cmdid, userid, argid
+}
+
+func (d *DBHandler) GetDeviceId(ioname string, descname string) (int, int) {
+	ioid := d.GetId(ioname, "deviceid")
+	descid := d.GetId(descname, "descid")
+
+	return ioid, descid
+}
+
+func (d *DBHandler) GetId(name string, flag string) int {
+	var id int
+	if _, ok := d.ids[flag][name]; ok {
+		id = d.ids[flag][name]
+	} else {
+		tablename, _ := d.GetTableinfo(flag)
+
 		tx := d.db.MustBegin()
-		tx.MustExec(fmt.Sprintf(data.InsertSimpleTable, tablename), ioname)
+		tx.MustExec(fmt.Sprintf(data.InsertSimpleTable, tablename), name)
 		tx.Commit()
 
-		err := d.db.QueryRow(fmt.Sprintf("SELECT _id FROM %s where _name=$1", tablename), ioname).Scan(&ioid)
+		err := d.db.QueryRow(fmt.Sprintf("SELECT _id FROM %s where _name=$1", tablename), name).Scan(&id)
 		if err != nil {
 			log.Fatal(err)
 		}
+
+		d.ids[flag][name] = id
 	}
 
-	var descid int
-	if descname != "" {
-		tablename, _ = d.GetTableinfo("descid")
-		err = d.db.QueryRow(fmt.Sprintf("SELECT _id FROM %s where _name=$1", tablename), descname).Scan(&descid)
-		if err != nil {
-			tx := d.db.MustBegin()
-			tx.MustExec(fmt.Sprintf(data.InsertSimpleTable, tablename), descname)
-			tx.Commit()
-
-			err := d.db.QueryRow(fmt.Sprintf("SELECT _id FROM %s where _name=$1", tablename), descname).Scan(&descid)
-			if err != nil {
-				log.Fatal(err)
-			}
-		}
-	}
-
-	return ioid, descid
+	return id
 }
 
 func (d *DBHandler) GetTableinfo(tablename string) (string, string) {
@@ -633,41 +644,61 @@ func (d *DBHandler) GetTableinfo(tablename string) (string, string) {
 }
 
 func (d *DBHandler) GetTablename(tableinfo string, tb string) string {
+	flag := d.GetTableFlag(time.Now(), tableinfo, tb)
+
+	if flag == "" {
+		return tb
+	} else {
+		return tb + "_" + flag
+	}
+}
+
+func (d *DBHandler) GetCustomTablename(timevalue time.Time, tb string) string {
+	flag := d.GetTableFlag(timevalue, "metric_ref", tb)
+
+	if flag == "" {
+		return tb
+	} else {
+		return tb + "_" + flag
+	}
+}
+
+func (d *DBHandler) GetTableFlag(timevalue time.Time, tableinfo string, tb string) string {
 	if tableinfo == "metric_ref" {
 		switch d.name {
 		case "pg-hour", "pg-day":
-			return tb + "_" + time.Now().Format("060102") + "00"
+			return timevalue.Format("060102") + "00"
 		case "pg-week":
-			_, week := time.Now().ISOWeek()
+			_, week := timevalue.ISOWeek()
 			weekstr := strconv.Itoa(week)
 			if week < 10 {
 				weekstr = "0" + weekstr
 			}
 
-			return tb + "_" + time.Now().Format("0601") + weekstr
+			return timevalue.Format("0601") + weekstr
 		case "pg-month":
-			return tb + "_" + time.Now().Format("0601")
+			return timevalue.Format("0601")
 		default:
-			return tb
+			return ""
 		}
 	} else if tableinfo == "metric" {
 		switch d.name {
 		case "pg-hour":
-			return tb + "_" + time.Now().Format("06010215")
+			return timevalue.Format("06010215")
 		case "pg-day":
-			return tb + "_" + time.Now().Format("060102") + "00"
+			return timevalue.Format("060102") + "00"
 		case "pg-week":
-			_, week := time.Now().ISOWeek()
+			_, week := timevalue.ISOWeek()
 			weekstr := strconv.Itoa(week)
 			if week < 10 {
 				weekstr = "0" + weekstr
 			}
 
-			return tb + "_" + time.Now().Format("0601") + weekstr
+			return timevalue.Format("0601") + weekstr
 		case "pg-month":
-			return tb + "_" + time.Now().Format("0601")
+			return timevalue.Format("0601")
 		default:
-			return tb
+			return ""
 		}
 	} else {
 		return ""
@@ -697,7 +728,18 @@ func DBInit(dbinfo DbInfo, demoinfo DemoInfo, info *data.AgentinfoArr) *DBHandle
 	}
 	d.CheckTable()
 	d.DemoHostSetting(info)
+	d.metric_ref_flag = d.GetTableFlag(time.Now(), "metric_ref", metric_ref_tables[0])
+	d.metric_flag = d.GetTableFlag(time.Now(), "metric", metric_tables[0])
+
 	d.hosts = d.GetHostnames()
+	d.ids = make(map[string]map[string]int)
+	d.ids["proccmd"] = d.GetNames("proccmd")
+	d.ids["procuserid"] = d.GetNames("procuserid")
+	d.ids["procargid"] = d.GetNames("procargid")
+	d.ids["deviceid"] = d.GetNames("deviceid")
+	d.ids["descid"] = d.GetNames("descid")
+
+	go d.CheckTableInterval()
 
 	return d
 }
