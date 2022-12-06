@@ -3,9 +3,7 @@ package app
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"manager/data"
-	"time"
 
 	"gopkg.in/Shopify/sarama.v1"
 )
@@ -16,9 +14,9 @@ func ConsumerHostGroup(cshost chan<- *data.AgentHostAgentInfo, config SettingKaf
 	ctx, _ := context.WithCancel(context.Background())
 	go func() {
 		for {
-			fmt.Printf("consumer host before %d\n", time.Now().UnixMicro())
+			//fmt.Printf("consumer host before %d\n", time.Now().UnixMicro())
 			groupconsumer.Consume(ctx, []string{"host"}, &grouptype)
-			fmt.Printf("consumer host after %d\n", time.Now().UnixMicro())
+			//fmt.Printf("consumer host after %d\n", time.Now().UnixMicro())
 		}
 	}()
 }
@@ -29,9 +27,9 @@ func ConsumerPerfGroup(cshost chan<- *data.AgentRealTimePerf, config SettingKafk
 	ctx, _ := context.WithCancel(context.Background())
 	go func() {
 		for {
-			fmt.Printf("consumer perf before %d\n", time.Now().UnixMicro())
+			//fmt.Printf("consumer perf before %d\n", time.Now().UnixMicro())
 			groupconsumer.Consume(ctx, []string{"realtimeperf"}, &grouptype)
-			fmt.Printf("consumer perf after %d\n", time.Now().UnixMicro())
+			//fmt.Printf("consumer perf after %d\n", time.Now().UnixMicro())
 		}
 	}()
 }
@@ -42,9 +40,9 @@ func ConsumerPIDGroup(cshost chan<- *data.AgentRealTimePID, config SettingKafka)
 	ctx, _ := context.WithCancel(context.Background())
 	go func() {
 		for {
-			fmt.Printf("consumer pid before %d\n", time.Now().UnixMicro())
+			//fmt.Printf("consumer pid before %d\n", time.Now().UnixMicro())
 			groupconsumer.Consume(ctx, []string{"realtimepid"}, &grouptype)
-			fmt.Printf("consumer pid after %d\n", time.Now().UnixMicro())
+			//fmt.Printf("consumer pid after %d\n", time.Now().UnixMicro())
 		}
 	}()
 }
@@ -55,9 +53,9 @@ func ConsumerDiskGroup(cshost chan<- *data.AgentRealTimeDisk, config SettingKafk
 	ctx, _ := context.WithCancel(context.Background())
 	go func() {
 		for {
-			fmt.Printf("consumer disk before %d\n", time.Now().UnixMicro())
+			//fmt.Printf("consumer disk before %d\n", time.Now().UnixMicro())
 			groupconsumer.Consume(ctx, []string{"realtimedisk"}, &grouptype)
-			fmt.Printf("consumer disk after %d\n", time.Now().UnixMicro())
+			//fmt.Printf("consumer disk after %d\n", time.Now().UnixMicro())
 		}
 	}()
 }
@@ -68,9 +66,9 @@ func ConsumerNetGroup(cshost chan<- *data.AgentRealTimeNet, config SettingKafka)
 	ctx, _ := context.WithCancel(context.Background())
 	go func() {
 		for {
-			fmt.Printf("consumer net before %d\n", time.Now().UnixMicro())
+			//fmt.Printf("consumer net before %d\n", time.Now().UnixMicro())
 			groupconsumer.Consume(ctx, []string{"realtimenet"}, &grouptype)
-			fmt.Printf("consumer net after %d\n", time.Now().UnixMicro())
+			//fmt.Printf("consumer net after %d\n", time.Now().UnixMicro())
 		}
 	}()
 }
@@ -99,7 +97,7 @@ func (consumer *kafkaHostGroup) ConsumeClaim(session sarama.ConsumerGroupSession
 			}
 
 		case <-session.Context().Done():
-			fmt.Println("kafkaHostError :", session.Context().Err().Error())
+			//fmt.Println("kafkaHostError :", session.Context().Err().Error())
 			return nil
 		}
 	}
@@ -129,7 +127,7 @@ func (consumer *kafkarealtimeperfGroup) ConsumeClaim(session sarama.ConsumerGrou
 			}
 
 		case <-session.Context().Done():
-			fmt.Println("kafkaPerfError :", session.Context().Err().Error())
+			//fmt.Println("kafkaPerfError :", session.Context().Err().Error())
 			return nil
 		}
 	}
@@ -159,7 +157,7 @@ func (consumer *kafkarealtimepidGroup) ConsumeClaim(session sarama.ConsumerGroup
 			}
 
 		case <-session.Context().Done():
-			fmt.Println("kafkaPidError :", session.Context().Err().Error())
+			//fmt.Println("kafkaPidError :", session.Context().Err().Error())
 			return nil
 		}
 	}
@@ -189,7 +187,7 @@ func (consumer *kafkarealtimediskGroup) ConsumeClaim(session sarama.ConsumerGrou
 			}
 
 		case <-session.Context().Done():
-			fmt.Println("kafkaDiskError :", session.Context().Err().Error())
+			//fmt.Println("kafkaDiskError :", session.Context().Err().Error())
 			return nil
 		}
 	}
@@ -219,7 +217,7 @@ func (consumer *kafkarealtimenetGroup) ConsumeClaim(session sarama.ConsumerGroup
 			}
 
 		case <-session.Context().Done():
-			fmt.Println("kafkaNetError :", session.Context().Err().Error())
+			//fmt.Println("kafkaNetError :", session.Context().Err().Error())
 			return nil
 		}
 	}
