@@ -1,6 +1,7 @@
 package app
 
 import (
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -50,7 +51,16 @@ func TcpProcessing(reqChan chan<- *DataKey, resChan chan []byte, apiserver ApiSe
 
 		go func(c net.Conn) {
 			for {
-				_, err := c.Write(<-resChan)
+				msg := <-resChan
+				msglen := make([]byte, 4)
+				binary.LittleEndian.PutUint32(msglen, uint32(len(msg)))
+
+				_, err := c.Write(msglen)
+				if err != nil {
+					log.Println(err)
+					return
+				}
+				_, err = c.Write(msg)
 				if err != nil {
 					log.Println(err)
 					return
