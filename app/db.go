@@ -38,9 +38,7 @@ func (d *DBHandler) CheckTableInfo() {
 	for _, tb := range info_tables {
 		var exist_count int
 		err := d.db.QueryRow("SELECT COUNT(*) FROM pg_tables where tablename=$1", tb).Scan(&exist_count)
-		if err != nil {
-			log.Fatal(err)
-		}
+		ErrorFatal(err)
 
 		if exist_count == 0 {
 			tx := d.db.MustBegin()
@@ -65,13 +63,11 @@ func (d *DBHandler) CheckTableInfo() {
 func (d *DBHandler) CheckTableMetricref() {
 	// Metric Reference Table Check
 	for _, tb := range metric_ref_tables {
-		tablename := d.GetTablename("metric_ref", tb)
+		tablename := d.GetTablename(tb)
 
 		var exist_count int
 		err := d.db.QueryRow("SELECT COUNT(*) FROM public.tableinfo where _tablename=$1", tablename).Scan(&exist_count)
-		if err != nil {
-			log.Fatal(err)
-		}
+		ErrorFatal(err)
 
 		if exist_count == 0 {
 			tx := d.db.MustBegin()
@@ -85,13 +81,11 @@ func (d *DBHandler) CheckTableMetricref() {
 func (d *DBHandler) CheckTableMetric() {
 	// Metric Table Check
 	for _, tb := range metric_tables {
-		tablename := d.GetTablename("metric", tb)
+		tablename := d.GetTablename(tb)
 
 		var exist_count int
 		err := d.db.QueryRow("SELECT COUNT(*) FROM public.tableinfo where _tablename=$1", tablename).Scan(&exist_count)
-		if err != nil {
-			log.Fatal(err)
-		}
+		ErrorFatal(err)
 
 		if exist_count == 0 {
 			tx := d.db.MustBegin()
@@ -143,7 +137,7 @@ func (d *DBHandler) CheckTableInterval() {
 			// 현재 테이블의 값을 이후 테이블로 복사
 			tx := d.db.MustBegin()
 			for _, s := range metric_ref_tables {
-				tx.MustExec(fmt.Sprintf(data.InsertPrevData, d.GetCustomTablename(aftertime, s), d.GetTablename("metric_ref", s)))
+				tx.MustExec(fmt.Sprintf(data.InsertPrevData, d.GetCustomTablename(aftertime, s), d.GetTablename(s)))
 			}
 			tx.Commit()
 		}
@@ -158,9 +152,7 @@ func (d *DBHandler) CheckTableInterval() {
 func (d *DBHandler) DemoHostSetting(arr *data.AgentinfoArr) {
 	var exist_count int
 	err := d.db.QueryRow("SELECT COUNT(*) FROM agentinfo where _enabled=1 and _hostname like 'Dummy%'").Scan(&exist_count)
-	if err != nil {
-		log.Fatal(err)
-	}
+	ErrorFatal(err)
 
 	if exist_count < d.demo.HostCount {
 		tx := d.db.MustBegin()
@@ -213,7 +205,7 @@ func (d *DBHandler) GetHostnames() map[string]int {
 
 func (d *DBHandler) GetNames(tb string) map[string]int {
 	names := make(map[string]int, 0)
-	tablename, _ := d.GetTableinfo(tb)
+	tablename := d.GetTablename(tb)
 
 	rows, err := d.db.Query(fmt.Sprintf("SELECT _id, _name FROM %s", tablename))
 	if err != nil {
@@ -364,71 +356,31 @@ func (d *DBHandler) SetEmptyAgentinfo(agentname string) int {
 	return agentid
 }
 
-func (d *DBHandler) SetPerfPg(csperf *data.AgentRealTimePerf, agentid int, tables ...data.Table) {
+func (d *DBHandler) SetPerf(csperf *data.AgentRealTimePerf, agentid int, tables ...data.Table) {
 	// Set Lastrealtimeperf
 	for _, t := range tables {
 		t.SetData(csperf, agentid)
 	}
 }
 
-func (d *DBHandler) InsertPerfPg(lrtp *data.Lastrealtimeperf, perf *data.RealtimeperfPg, cpu *data.RealtimecpuPg, agentid int, ptb string, ctb string) {
+func (d *DBHandler) InsertPerf(agentid int, tables ...data.Table) {
 	var err error
 	tx := d.db.MustBegin()
 
-	tx.MustExec(data.DeleteLastrealtimeperf, agentid)
-	_, err = tx.Exec(data.InsertLastRealtimePerf, lrtp.GetArgs()...)
-	if err != nil {
-		log.Println(err)
-		tx.Rollback()
-		return
-	}
+	for _, t := range tables {
+		var tablename string
+		switch t.(type) {
+		case *data.Lastrealtimeperf:
+			tablename = d.GetTablename("lastrealtimeperf")
+			tx.MustExec(data.DeleteLastrealtimeperf, agentid)
+		case *data.RealtimeperfPg, *data.RealtimeperfTs:
+			tablename = d.GetTablename("realtimeperf")
+		case *data.RealtimecpuPg, *data.RealtimecpuTs:
+			tablename = d.GetTablename("realtimecpu")
+		}
 
-	_, err = tx.Exec(fmt.Sprintf(data.InsertRealtimePerf, ptb), perf.GetArgs()...)
-	if err != nil {
-		log.Println(err)
-		tx.Rollback()
-		return
-	}
-	_, err = tx.Exec(fmt.Sprintf(data.InsertRealtimeCpu, ctb), cpu.GetArgs()...)
-	if err != nil {
-		log.Println(err)
-		tx.Rollback()
-		return
-	}
-	tx.Commit()
-}
-
-func (d *DBHandler) SetPerfTs(csperf *data.AgentRealTimePerf, lrtp *data.Lastrealtimeperf, perf *data.RealtimeperfTs, cpu *data.RealtimecpuTs, agentid int) {
-	// Set Lastrealtimeperf
-	lrtp.SetData(csperf, agentid)
-
-	// Set Perf
-	perf.SetData(csperf, agentid)
-	cpu.SetData(csperf, agentid)
-}
-
-func (d *DBHandler) InsertPerfTs(lrtp *data.Lastrealtimeperf, perf *data.RealtimeperfTs, cpu *data.RealtimecpuTs, agentid int, ptb string, ctb string) {
-	var err error
-	tx := d.db.MustBegin()
-
-	tx.MustExec(data.DeleteLastrealtimeperf, agentid)
-	_, err = tx.Exec(data.InsertLastRealtimePerf, lrtp.GetArgs()...)
-	if err != nil {
-		log.Println(err)
-		tx.Rollback()
-		return
-	}
-	_, err = tx.Exec(fmt.Sprintf(data.InsertRealtimePerf, ptb), perf.GetArgs()...)
-	if err != nil {
-		log.Println(err)
-		tx.Rollback()
-		return
-	}
-	_, err = tx.Exec(fmt.Sprintf(data.InsertRealtimeCpu, ctb), cpu.GetArgs()...)
-	if err != nil {
-		log.Println(err)
-		tx.Rollback()
-		return
+		_, err = tx.Exec(t.GetInsertStmt(tablename), t.GetArgs()...)
+		ErrorTx(err, tx)
 	}
 	tx.Commit()
 }
@@ -441,22 +393,16 @@ func (d *DBHandler) SetPidPg(cspid *data.AgentRealTimePID, pid *data.Realtimepid
 	}
 }
 
-func (d *DBHandler) InsertPidPg(pid *data.RealtimepidPgArr, proc *data.RealtimeprocPgArr, pitb string, prtb string) {
+func (d *DBHandler) InsertPidPg(pid *data.RealtimepidPgArr, proc *data.RealtimeprocPgArr) {
 	var err error
 	tx := d.db.MustBegin()
 
-	_, err = tx.Exec(fmt.Sprintf(data.InsertRealtimePidPg, pitb), pid.GetArgs()...)
-	if err != nil {
-		log.Println(err)
-		tx.Rollback()
-		return
-	}
-	_, err = tx.Exec(fmt.Sprintf(data.InsertRealtimeProcPg, prtb), proc.GetArgs()...)
-	if err != nil {
-		log.Println(err)
-		tx.Rollback()
-		return
-	}
+	_, err = tx.Exec(fmt.Sprintf(data.InsertRealtimePidPg, d.GetTablename("realtimepid")), pid.GetArgs()...)
+	ErrorTx(err, tx)
+
+	_, err = tx.Exec(fmt.Sprintf(data.InsertRealtimeProcPg, d.GetTablename("realtimeproc")), proc.GetArgs()...)
+	ErrorTx(err, tx)
+
 	tx.Commit()
 }
 
@@ -468,21 +414,15 @@ func (d *DBHandler) SetPidTs(cspid *data.AgentRealTimePID, pid *data.Realtimepid
 	}
 }
 
-func (d *DBHandler) InsertPidTs(pid *data.RealtimepidTsArr, proc *data.RealtimeprocTsArr, pitb string, prtb string) {
+func (d *DBHandler) InsertPidTs(pid *data.RealtimepidTsArr, proc *data.RealtimeprocTsArr) {
 	var err error
 	tx := d.db.MustBegin()
-	_, err = tx.Exec(fmt.Sprintf(data.InsertRealtimePidTs, pitb), pid.GetArgs()...)
-	if err != nil {
-		log.Println(err)
-		tx.Rollback()
-		return
-	}
-	_, err = tx.Exec(fmt.Sprintf(data.InsertRealtimeProcTs, prtb), proc.GetArgs()...)
-	if err != nil {
-		log.Println(err)
-		tx.Rollback()
-		return
-	}
+	_, err = tx.Exec(fmt.Sprintf(data.InsertRealtimePidTs, d.GetTablename("realtimepid")), pid.GetArgs()...)
+	ErrorTx(err, tx)
+
+	_, err = tx.Exec(fmt.Sprintf(data.InsertRealtimeProcTs, d.GetTablename("realtimeproc")), proc.GetArgs()...)
+	ErrorTx(err, tx)
+
 	tx.Commit()
 }
 
@@ -493,6 +433,15 @@ func (d *DBHandler) SetDiskPg(csdisk *data.AgentRealTimeDisk, disk *data.Realtim
 	}
 }
 
+func (d *DBHandler) InsertDiskPg(disk *data.RealtimediskPgArr) {
+	tx := d.db.MustBegin()
+	var err error
+	_, err = tx.Exec(fmt.Sprintf(data.InsertRealtimeDiskPg, d.GetTablename("realtimedisk")), disk.GetArgs()...)
+	ErrorTx(err, tx)
+
+	tx.Commit()
+}
+
 func (d *DBHandler) SetDiskTs(csdisk *data.AgentRealTimeDisk, disk *data.RealtimediskTsArr, agentid int) {
 	for _, p := range csdisk.PerfList {
 		ionameid, descid := d.GetDeviceId(p.Ioname, p.Descname)
@@ -500,27 +449,12 @@ func (d *DBHandler) SetDiskTs(csdisk *data.AgentRealTimeDisk, disk *data.Realtim
 	}
 }
 
-func (d *DBHandler) InsertDiskPg(disk *data.RealtimediskPgArr, tablename string) {
-	tx := d.db.MustBegin()
+func (d *DBHandler) InsertDiskTs(disk *data.RealtimediskTsArr) {
 	var err error
-	_, err = tx.Exec(fmt.Sprintf(data.InsertRealtimeDiskPg, tablename), disk.GetArgs()...)
-	if err != nil {
-		log.Println(err)
-		tx.Rollback()
-		return
-	}
-	tx.Commit()
-}
+	tx := d.db.MustBegin()
+	_, err = tx.Exec(fmt.Sprintf(data.InsertRealtimeDiskTs, d.GetTablename("realtimedisk")), disk.GetArgs()...)
+	ErrorTx(err, tx)
 
-func (d *DBHandler) InsertDiskTs(disk *data.RealtimediskTsArr, tablename string) {
-	var err error
-	tx := d.db.MustBegin()
-	_, err = tx.Exec(fmt.Sprintf(data.InsertRealtimeDiskTs, tablename), disk.GetArgs()...)
-	if err != nil {
-		log.Println(err)
-		tx.Rollback()
-		return
-	}
 	tx.Commit()
 }
 
@@ -531,15 +465,12 @@ func (d *DBHandler) SetNetPg(csnet *data.AgentRealTimeNet, net *data.Realtimenet
 	}
 }
 
-func (d *DBHandler) InsertNetPg(net *data.RealtimenetPgArr, tablename string) {
+func (d *DBHandler) InsertNetPg(net *data.RealtimenetPgArr) {
 	tx := d.db.MustBegin()
 	var err error
-	_, err = tx.Exec(fmt.Sprintf(data.InsertRealtimeNetPg, tablename), net.GetArgs()...)
-	if err != nil {
-		log.Println(err)
-		tx.Rollback()
-		return
-	}
+	_, err = tx.Exec(fmt.Sprintf(data.InsertRealtimeNetPg, d.GetTablename("realtimenet")), net.GetArgs()...)
+	ErrorTx(err, tx)
+
 	tx.Commit()
 }
 
@@ -550,15 +481,12 @@ func (d *DBHandler) SetNetTs(csnet *data.AgentRealTimeNet, net *data.Realtimenet
 	}
 }
 
-func (d *DBHandler) InsertNetTs(net *data.RealtimenetTsArr, tablename string) {
+func (d *DBHandler) InsertNetTs(net *data.RealtimenetTsArr) {
 	var err error
 	tx := d.db.MustBegin()
-	_, err = tx.Exec(fmt.Sprintf(data.InsertRealtimeNetTs, tablename), net.GetArgs()...)
-	if err != nil {
-		log.Println(err)
-		tx.Rollback()
-		return
-	}
+	_, err = tx.Exec(fmt.Sprintf(data.InsertRealtimeNetTs, d.GetTablename("realtimenet")), net.GetArgs()...)
+	ErrorTx(err, tx)
+
 	tx.Commit()
 }
 
@@ -582,16 +510,14 @@ func (d *DBHandler) GetId(name string, flag string) int {
 	if _, ok := d.ids[flag][name]; ok {
 		id = d.ids[flag][name]
 	} else {
-		tablename, _ := d.GetTableinfo(flag)
+		tablename := d.GetTablename(flag)
 
 		tx := d.db.MustBegin()
 		tx.MustExec(fmt.Sprintf(data.InsertSimpleTable, tablename), name)
 		tx.Commit()
 
 		err := d.db.QueryRow(fmt.Sprintf("SELECT _id FROM %s where _name=$1", tablename), name).Scan(&id)
-		if err != nil {
-			log.Fatal(err)
-		}
+		ErrorFatal(err)
 
 		d.ids[flag][name] = id
 	}
@@ -599,43 +525,46 @@ func (d *DBHandler) GetId(name string, flag string) int {
 	return id
 }
 
-func (d *DBHandler) GetTableinfo(tablename string) (string, string) {
-	var dbtype string
+func (d *DBHandler) GetTabletype(tablename string) string {
 	if d.name[:2] == "pg" {
-		dbtype = "pg"
+		return "pg"
 	} else {
-		dbtype = "ts"
+		return "ts"
 	}
+}
 
+func (d *DBHandler) GetTablename(tablename string) string {
 	for _, tb := range info_tables {
 		if tablename == tb {
-			return tablename, dbtype
+			return tablename
 		}
 	}
 
 	for _, tb := range metric_ref_tables {
 		if tablename == tb {
-			return d.GetTablename("metric_ref", tb), dbtype
+			flag := d.GetTableFlag(time.Now(), "metric_ref", tb)
+
+			if flag == "" {
+				return tb
+			} else {
+				return tb + "_" + flag
+			}
 		}
 	}
 
 	for _, tb := range metric_tables {
 		if tablename == tb {
-			return d.GetTablename("metric", tb), dbtype
+			flag := d.GetTableFlag(time.Now(), "metric", tb)
+
+			if flag == "" {
+				return tb
+			} else {
+				return tb + "_" + flag
+			}
 		}
 	}
 
-	return "", ""
-}
-
-func (d *DBHandler) GetTablename(tableinfo string, tb string) string {
-	flag := d.GetTableFlag(time.Now(), tableinfo, tb)
-
-	if flag == "" {
-		return tb
-	} else {
-		return tb + "_" + flag
-	}
+	return ""
 }
 
 func (d *DBHandler) GetCustomTablename(timevalue time.Time, tb string) string {
@@ -697,9 +626,7 @@ func (d *DBHandler) DBClose() {
 func DBConnection(dbinfo DbInfo) *sqlx.DB {
 	conn := dbinfo.Datasource()
 	db, err := sqlx.Connect("postgres", conn)
-	if err != nil {
-		log.Fatal(err)
-	}
+	ErrorFatal(err)
 	db.SetMaxIdleConns(3)
 	db.SetMaxOpenConns(5)
 	return db
