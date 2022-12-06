@@ -16,9 +16,9 @@ func ConsumerHostGroup(cshost chan<- *data.AgentHostAgentInfo, config SettingKaf
 	ctx, _ := context.WithCancel(context.Background())
 	go func() {
 		for {
-			fmt.Printf("consumer host before %d", time.Now().UnixMicro())
+			fmt.Printf("consumer host before %d\n", time.Now().UnixMicro())
 			groupconsumer.Consume(ctx, []string{"host"}, &grouptype)
-			fmt.Printf("consumer host after %d", time.Now().UnixMicro())
+			fmt.Printf("consumer host after %d\n", time.Now().UnixMicro())
 		}
 	}()
 }
@@ -29,9 +29,9 @@ func ConsumerPerfGroup(cshost chan<- *data.AgentRealTimePerf, config SettingKafk
 	ctx, _ := context.WithCancel(context.Background())
 	go func() {
 		for {
-			fmt.Printf("consumer perf before %d", time.Now().UnixMicro())
+			fmt.Printf("consumer perf before %d\n", time.Now().UnixMicro())
 			groupconsumer.Consume(ctx, []string{"realtimeperf"}, &grouptype)
-			fmt.Printf("consumer perf after %d", time.Now().UnixMicro())
+			fmt.Printf("consumer perf after %d\n", time.Now().UnixMicro())
 		}
 	}()
 }
@@ -42,9 +42,9 @@ func ConsumerPIDGroup(cshost chan<- *data.AgentRealTimePID, config SettingKafka)
 	ctx, _ := context.WithCancel(context.Background())
 	go func() {
 		for {
-			fmt.Printf("consumer pid before %d", time.Now().UnixMicro())
+			fmt.Printf("consumer pid before %d\n", time.Now().UnixMicro())
 			groupconsumer.Consume(ctx, []string{"realtimepid"}, &grouptype)
-			fmt.Printf("consumer pid after %d", time.Now().UnixMicro())
+			fmt.Printf("consumer pid after %d\n", time.Now().UnixMicro())
 		}
 	}()
 }
@@ -55,9 +55,9 @@ func ConsumerDiskGroup(cshost chan<- *data.AgentRealTimeDisk, config SettingKafk
 	ctx, _ := context.WithCancel(context.Background())
 	go func() {
 		for {
-			fmt.Printf("consumer disk before %d", time.Now().UnixMicro())
+			fmt.Printf("consumer disk before %d\n", time.Now().UnixMicro())
 			groupconsumer.Consume(ctx, []string{"realtimedisk"}, &grouptype)
-			fmt.Printf("consumer disk after %d", time.Now().UnixMicro())
+			fmt.Printf("consumer disk after %d\n", time.Now().UnixMicro())
 		}
 	}()
 }
@@ -68,9 +68,9 @@ func ConsumerNetGroup(cshost chan<- *data.AgentRealTimeNet, config SettingKafka)
 	ctx, _ := context.WithCancel(context.Background())
 	go func() {
 		for {
-			fmt.Printf("consumer net before %d", time.Now().UnixMicro())
+			fmt.Printf("consumer net before %d\n", time.Now().UnixMicro())
 			groupconsumer.Consume(ctx, []string{"realtimenet"}, &grouptype)
-			fmt.Printf("consumer net after %d", time.Now().UnixMicro())
+			fmt.Printf("consumer net after %d\n", time.Now().UnixMicro())
 		}
 	}()
 }
