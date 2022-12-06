@@ -399,6 +399,24 @@ func (d *DBHandler) SetPid(cspid *data.AgentRealTimePID, agentid int, tables ...
 	}
 }
 
+func (d *DBHandler) SetDisk(csdisk *data.AgentRealTimeDisk, agentid int, tables ...data.TableArr) {
+	for _, p := range csdisk.PerfList {
+		ionameid, descid := d.GetDeviceId(p.Ioname, p.Descname)
+		for _, t := range tables {
+			t.SetData(p, csdisk.Agenttime, agentid, ionameid, descid)
+		}
+	}
+}
+
+func (d *DBHandler) SetNet(csnet *data.AgentRealTimeNet, agentid int, tables ...data.TableArr) {
+	for _, p := range csnet.PerfList {
+		ionameid, _ := d.GetDeviceId(p.Ioname, "")
+		for _, t := range tables {
+			t.SetData(p, csnet.Agenttime, agentid, ionameid)
+		}
+	}
+}
+
 func (d *DBHandler) InsertTableArr(tables ...data.TableArr) {
 	var err error
 	tx := d.db.MustBegin()
@@ -420,24 +438,6 @@ func (d *DBHandler) InsertTableArr(tables ...data.TableArr) {
 		ErrorTx(err, tx)
 	}
 	tx.Commit()
-}
-
-func (d *DBHandler) SetDisk(csdisk *data.AgentRealTimeDisk, agentid int, tables ...data.TableArr) {
-	for _, p := range csdisk.PerfList {
-		ionameid, descid := d.GetDeviceId(p.Ioname, p.Descname)
-		for _, t := range tables {
-			t.SetData(p, csdisk.Agenttime, agentid, ionameid, descid)
-		}
-	}
-}
-
-func (d *DBHandler) SetNet(csnet *data.AgentRealTimeNet, agentid int, tables ...data.TableArr) {
-	for _, p := range csnet.PerfList {
-		ionameid, _ := d.GetDeviceId(p.Ioname, "")
-		for _, t := range tables {
-			t.SetData(p, csnet.Agenttime, agentid, ionameid)
-		}
-	}
 }
 
 func (d *DBHandler) GetProcId(cspidinner *data.AgentRealTimePIDInner) (int, int, int) {
