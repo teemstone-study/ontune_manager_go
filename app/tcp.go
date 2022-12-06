@@ -8,7 +8,7 @@ import (
 	"net"
 )
 
-func TcpProcessing(reqChan chan<- *DataCode, resChan chan []byte, apiserver ApiServer) {
+func TcpProcessing(reqChan chan<- *DataKey, resChan chan []byte, apiserver ApiServer) {
 	fmt.Println("TCP Server 8088 port")
 	ln, err := net.Listen("tcp", fmt.Sprintf(":%s", apiserver.Port))
 	if err != nil {
@@ -33,11 +33,11 @@ func TcpProcessing(reqChan chan<- *DataCode, resChan chan []byte, apiserver ApiS
 						return
 					}
 					log.Printf("Failed Connection: %v\n", err)
-					reqChan <- &DataCode{0}
+					reqChan <- &DataKey{DATAKEY_CODE, 0}
 					return
 				}
 				if 0 < n {
-					var req_recv_data DataCode
+					var req_recv_data DataKey
 					if err := json.Unmarshal(req_recv[:n], &req_recv_data); err != nil {
 						log.Printf("JSON Error")
 						continue

@@ -52,6 +52,10 @@ func (value Bitmask) IsSet(key Bitmask) bool {
 	return value&key != 0
 }
 
+func (d DataKey) IsDataMapping(key Bitmask) bool {
+	return d.Code == DATAKEY_CODE && d.Key.IsSet(key)
+}
+
 func (c *ChannelStruct) ChannelInit() {
 	c.ConsumerData = ConsumerStruct{}
 	c.ConsumerData.ConsumerInit()
