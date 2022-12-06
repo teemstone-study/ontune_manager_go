@@ -76,7 +76,7 @@ func ConvertJson(code uint32, rdata string) []byte {
 	realData.Data = rdata
 
 	json_data, err := json.Marshal(realData)
-	ErrorJson(err)
+	ErrorJson(err, code)
 
 	return json_data
 }

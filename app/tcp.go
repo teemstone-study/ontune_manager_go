@@ -40,7 +40,7 @@ func TcpProcessing(reqChan chan<- *DataCode, resChan chan []byte, apiserver ApiS
 					var req_recv_data DataCode
 					if err := json.Unmarshal(req_recv[:n], &req_recv_data); err != nil {
 						log.Printf("JSON Error")
-						return
+						continue
 					}
 					fmt.Printf("recv %v\n", req_recv_data)
 					reqChan <- &req_recv_data

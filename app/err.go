@@ -6,9 +6,9 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-func ErrorJson(err error) {
+func ErrorJson(err error, code uint32) {
 	if err != nil {
-		log.Println("JSON Data Conversion error")
+		log.Printf("JSON Data Conversion error - %d\n", code)
 	}
 }
 
