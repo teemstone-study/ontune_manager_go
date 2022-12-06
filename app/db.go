@@ -137,7 +137,11 @@ func (d *DBHandler) CheckTableInterval() {
 			// 현재 테이블의 값을 이후 테이블로 복사
 			tx := d.db.MustBegin()
 			for _, s := range metric_ref_tables {
-				tx.MustExec(fmt.Sprintf(data.InsertPrevData, d.GetCustomTablename(aftertime, s), d.GetTablename(s)))
+				_, err := tx.Exec(fmt.Sprintf(data.InsertPrevData, d.GetCustomTablename(aftertime, s), d.GetTablename(s)))
+				if err != nil {
+					d.CheckTableMetricref()
+					tx.MustExec(fmt.Sprintf(data.InsertPrevData, d.GetCustomTablename(aftertime, s), d.GetTablename(s)))
+				}
 			}
 			tx.Commit()
 		}
