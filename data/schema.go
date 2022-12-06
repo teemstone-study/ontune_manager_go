@@ -1,6 +1,8 @@
 package data
 
 import (
+	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -11,11 +13,18 @@ type Table interface {
 	SetData(data interface{}, agentid int)
 	GetArgs() []interface{}
 	GetString() string
+	GetInsertStmt(tablename string) string
 }
 
 type TableArr interface {
 	SetData(data interface{}, agenttime time.Time, ids ...int)
 	GetArgs() []interface{}
+}
+
+type TableArrEx interface {
+	SetData(data interface{})
+	GetArgs() []interface{}
+	GetArrString() []string
 }
 
 type Tableinfo struct {
@@ -208,10 +217,14 @@ func (r *Lastrealtimeperf) GetString() string {
 	data := r.GetArgs()
 	str_data := make([]string, 0)
 	for _, d := range data {
-		str_data = append(str_data, d.(string))
+		str_data = append(str_data, fmt.Sprintf("%v", d))
 	}
 
 	return strings.Join(str_data, ",")
+}
+
+func (r *Lastrealtimeperf) GetInsertStmt(tablename string) string {
+	return InsertLastRealtimePerf
 }
 
 type RealtimeperfPg struct {
@@ -408,10 +421,14 @@ func (r *RealtimeperfPg) GetString() string {
 	data := r.GetArgs()
 	str_data := make([]string, 0)
 	for _, d := range data {
-		str_data = append(str_data, d.(string))
+		str_data = append(str_data, fmt.Sprintf("%v", d))
 	}
 
 	return strings.Join(str_data, ",")
+}
+
+func (r *RealtimeperfPg) GetInsertStmt(tablename string) string {
+	return fmt.Sprintf(InsertRealtimePerf, tablename)
 }
 
 type RealtimeperfTs struct {
@@ -608,10 +625,14 @@ func (r *RealtimeperfTs) GetString() string {
 	data := r.GetArgs()
 	str_data := make([]string, 0)
 	for _, d := range data {
-		str_data = append(str_data, d.(string))
+		str_data = append(str_data, fmt.Sprintf("%v", d))
 	}
 
 	return strings.Join(str_data, ",")
+}
+
+func (r *RealtimeperfTs) GetInsertStmt(tablename string) string {
+	return fmt.Sprintf(InsertRealtimePerf, tablename)
 }
 
 type RealtimecpuPg struct {
@@ -673,10 +694,14 @@ func (r *RealtimecpuPg) GetString() string {
 	data := r.GetArgs()
 	str_data := make([]string, 0)
 	for _, d := range data {
-		str_data = append(str_data, d.(string))
+		str_data = append(str_data, fmt.Sprintf("%v", d))
 	}
 
 	return strings.Join(str_data, ",")
+}
+
+func (r *RealtimecpuPg) GetInsertStmt(tablename string) string {
+	return fmt.Sprintf(InsertRealtimeCpu, tablename)
 }
 
 type RealtimecpuTs struct {
@@ -738,10 +763,14 @@ func (r *RealtimecpuTs) GetString() string {
 	data := r.GetArgs()
 	str_data := make([]string, 0)
 	for _, d := range data {
-		str_data = append(str_data, d.(string))
+		str_data = append(str_data, fmt.Sprintf("%v", d))
 	}
 
 	return strings.Join(str_data, ",")
+}
+
+func (r *RealtimecpuTs) GetInsertStmt(tablename string) string {
+	return fmt.Sprintf(InsertRealtimeCpu, tablename)
 }
 
 type RealtimediskPg struct {
@@ -1515,6 +1544,69 @@ func (a *AgentinfoArr) GetArgs() []interface{} {
 	data = append(data, pq.Array(a.Btime))
 
 	return data
+}
+
+func (a *AgentinfoArr) GetArrString() []string {
+	arr := make([]string, 0)
+	size := len(a.Agentid)
+
+	for i := 0; i < size; i++ {
+		d := make([]string, 0)
+		d = append(d, strconv.Itoa(a.Agentid[i]))
+		d = append(d, a.Hostname[i])
+		d = append(d, a.Hostnameext[i])
+		d = append(d, strconv.Itoa(a.Enabled[i]))
+		d = append(d, strconv.Itoa(a.Connected[i]))
+		d = append(d, strconv.Itoa(a.Updated[i]))
+		d = append(d, strconv.Itoa(a.Shorttermbasic[i]))
+		d = append(d, strconv.Itoa(a.Shorttermproc[i]))
+		d = append(d, strconv.Itoa(a.Shorttermio[i]))
+		d = append(d, strconv.Itoa(a.Shorttermcpu[i]))
+		d = append(d, strconv.Itoa(a.Longtermbasic[i]))
+		d = append(d, strconv.Itoa(a.Longtermproc[i]))
+		d = append(d, strconv.Itoa(a.Longtermio[i]))
+		d = append(d, strconv.Itoa(a.Longtermcpu[i]))
+		d = append(d, a.Group[i])
+		d = append(d, a.Ipaddress[i])
+		d = append(d, a.Pscommand[i])
+		d = append(d, a.Logevent[i])
+		d = append(d, a.Processevent[i])
+		d = append(d, strconv.Itoa(a.Timecheck[i]))
+		d = append(d, fmt.Sprintf("%v", a.Disconnectedtime[i]))
+		d = append(d, strconv.Itoa(a.Skipdatatypes[i]))
+		d = append(d, strconv.Itoa(a.Virbasicperf[i]))
+		d = append(d, strconv.Itoa(a.Hypervisor[i]))
+		d = append(d, a.Serviceevent[i])
+		d = append(d, fmt.Sprintf("%v", a.Installdate[i]))
+		d = append(d, strconv.Itoa(a.Ibmpcrate[i]))
+		d = append(d, fmt.Sprintf("%v", a.Updatedtime[i]))
+		d = append(d, a.Os[i])
+		d = append(d, a.Fw[i])
+		d = append(d, a.Agentversion[i])
+		d = append(d, a.Model[i])
+		d = append(d, a.Serial[i])
+		d = append(d, strconv.Itoa(a.Processorcount[i]))
+		d = append(d, strconv.Itoa(a.Processorclock[i]))
+		d = append(d, strconv.Itoa(a.Memorysize[i]))
+		d = append(d, strconv.Itoa(a.Swapsize[i]))
+		d = append(d, strconv.Itoa(a.Poolid[i]))
+		d = append(d, strconv.Itoa(a.Replication[i]))
+		d = append(d, strconv.Itoa(a.Smt[i]))
+		d = append(d, strconv.Itoa(a.Micropar[i]))
+		d = append(d, strconv.Itoa(a.Capped[i]))
+		d = append(d, strconv.Itoa(a.Ec[i]))
+		d = append(d, strconv.Itoa(a.Virtualcpu[i]))
+		d = append(d, strconv.Itoa(a.Weight[i]))
+		d = append(d, strconv.Itoa(a.Cpupool[i]))
+		d = append(d, strconv.Itoa(a.Ams[i]))
+		d = append(d, a.Allip[i])
+		d = append(d, strconv.Itoa(a.Numanodecount[i]))
+		d = append(d, fmt.Sprintf("%v", a.Btime[i]))
+
+		arr = append(arr, strings.Join(d, ","))
+	}
+
+	return arr
 }
 
 type LastrealtimeperfArr struct {
