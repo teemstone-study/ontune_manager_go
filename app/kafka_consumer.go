@@ -185,9 +185,11 @@ func (consumer *kafkaHostGroup) ConsumeClaim(session sarama.ConsumerGroupSession
 			err := json.Unmarshal(message.Value, &hostData)
 			if err == nil {
 				*consumer.Csperf <- &hostData
+				session.MarkMessage(message, "")
 			}
 
 		case <-session.Context().Done():
+			fmt.Println("kafkaHostError :", session.Context().Err().Error())
 			return nil
 		}
 	}
@@ -213,9 +215,11 @@ func (consumer *kafkarealtimeperfGroup) ConsumeClaim(session sarama.ConsumerGrou
 			err := json.Unmarshal(message.Value, &perfData)
 			if err == nil {
 				*consumer.Csperf <- &perfData
+				session.MarkMessage(message, "")
 			}
 
 		case <-session.Context().Done():
+			fmt.Println("kafkaPerfError :", session.Context().Err().Error())
 			return nil
 		}
 	}
@@ -241,9 +245,11 @@ func (consumer *kafkarealtimepidGroup) ConsumeClaim(session sarama.ConsumerGroup
 			err := json.Unmarshal(message.Value, &hostData)
 			if err == nil {
 				*consumer.Csperf <- &hostData
+				session.MarkMessage(message, "")
 			}
 
 		case <-session.Context().Done():
+			fmt.Println("kafkaPidError :", session.Context().Err().Error())
 			return nil
 		}
 	}
@@ -269,9 +275,11 @@ func (consumer *kafkarealtimediskGroup) ConsumeClaim(session sarama.ConsumerGrou
 			err := json.Unmarshal(message.Value, &hostData)
 			if err == nil {
 				*consumer.Csperf <- &hostData
+				session.MarkMessage(message, "")
 			}
 
 		case <-session.Context().Done():
+			fmt.Println("kafkaDiskError :", session.Context().Err().Error())
 			return nil
 		}
 	}
@@ -297,9 +305,11 @@ func (consumer *kafkarealtimenetGroup) ConsumeClaim(session sarama.ConsumerGroup
 			err := json.Unmarshal(message.Value, &hostData)
 			if err == nil {
 				*consumer.Csperf <- &hostData
+				session.MarkMessage(message, "")
 			}
 
 		case <-session.Context().Done():
+			fmt.Println("kafkaNetError :", session.Context().Err().Error())
 			return nil
 		}
 	}
