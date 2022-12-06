@@ -227,7 +227,7 @@ func (d *DBHandler) GetNames(tb string) map[string]int {
 	return names
 }
 
-func (d *DBHandler) SetHost(cshost *data.AgentHostAgentInfo) {
+func (d *DBHandler) SetHost(cshost *data.AgentHostAgentInfo, agentinfo_arr *data.AgentinfoArr) {
 	/*--------------------------
 	AgentID -> Hostname
 	Agentname -> Hostnameext
@@ -249,13 +249,18 @@ func (d *DBHandler) SetHost(cshost *data.AgentHostAgentInfo) {
 		tx := d.db.MustBegin()
 		tx.MustExec(data.UpdateAgentinfo, cshost.AgentName, cshost.Ip, cshost.Model, cshost.Serial, cshost.Os, cshost.Agentversion, cshost.ProcessCount, cshost.ProcessClock, cshost.MemorySize, cshost.SwapMemory, ts, cshost.AgentID)
 		tx.Commit()
+
+		agent_data := []data.Agentinfo{}
+		d.db.Select(&agent_data, "SELECT * FROM agentinfo where _enabled=1 and _hostname=$1", cshost.AgentName)
+
+		agentinfo_arr.SetData(agent_data)
 	} else {
 		// Not Exists
-		d.SetHostinfo(cshost)
+		d.SetHostinfo(cshost, agentinfo_arr)
 	}
 }
 
-func (d *DBHandler) SetHostinfo(new_agent *data.AgentHostAgentInfo) int {
+func (d *DBHandler) SetHostinfo(new_agent *data.AgentHostAgentInfo, agentinfo_arr *data.AgentinfoArr) int {
 	ts := time.Now().Unix()
 	var max_count int
 	err := d.db.QueryRow("SELECT max(_agentid) FROM agentinfo where _enabled=1").Scan(&max_count)
@@ -268,7 +273,6 @@ func (d *DBHandler) SetHostinfo(new_agent *data.AgentHostAgentInfo) int {
 	d.hosts[new_agent.AgentID] = new_agentid
 
 	// Insert Logic
-	var agentinfo_arr data.AgentinfoArr
 	new_data := &data.Agentinfo{
 		Agentid:          new_agentid,
 		Hostname:         new_agent.AgentID,
@@ -338,6 +342,7 @@ func (d *DBHandler) SetEmptyAgentinfo(agentname string) int {
 		// Agent 정보보다 Perf 정보가 먼저 들어올 때 미존재하는 Agent면 Error 발생 가능성이 있으므로, Agent 정보를 먼저 구성해야 함
 		// Agent 정보는 AgentID만 넘기고 나머지는 빈 정보로 구성
 		// 어차피 Consumer Agent 정보가 들어오면 이미 존재하는 AgentID이므로 업데이트됨
+		agentinfo_arr := data.AgentinfoArr{}
 		agentid = d.SetHostinfo(&data.AgentHostAgentInfo{
 			AgentName:    agentname,
 			AgentID:      agentname,
@@ -350,7 +355,7 @@ func (d *DBHandler) SetEmptyAgentinfo(agentname string) int {
 			ProcessClock: 0,
 			MemorySize:   0,
 			SwapMemory:   0,
-		})
+		}, &agentinfo_arr)
 	}
 
 	return agentid
@@ -385,109 +390,54 @@ func (d *DBHandler) InsertPerf(agentid int, tables ...data.Table) {
 	tx.Commit()
 }
 
-func (d *DBHandler) SetPidPg(cspid *data.AgentRealTimePID, pid *data.RealtimepidPgArr, proc *data.RealtimeprocPgArr, agentid int) {
+func (d *DBHandler) SetPid(cspid *data.AgentRealTimePID, agentid int, tables ...data.TableArr) {
 	for _, p := range cspid.PerfList {
 		cmdid, userid, argid := d.GetProcId(&p)
-		pid.SetData(p, cspid.Agenttime, agentid, cmdid, userid, argid)
-		proc.SetData(p, cspid.Agenttime, agentid, cmdid, userid, argid)
+		for _, t := range tables {
+			t.SetData(p, cspid.Agenttime, agentid, cmdid, userid, argid)
+		}
 	}
 }
 
-func (d *DBHandler) InsertPidPg(pid *data.RealtimepidPgArr, proc *data.RealtimeprocPgArr) {
+func (d *DBHandler) InsertTableArr(tables ...data.TableArr) {
 	var err error
 	tx := d.db.MustBegin()
 
-	_, err = tx.Exec(fmt.Sprintf(data.InsertRealtimePidPg, d.GetTablename("realtimepid")), pid.GetArgs()...)
-	ErrorTx(err, tx)
+	for _, t := range tables {
+		var tablename string
+		switch t.(type) {
+		case *data.RealtimepidPgArr, *data.RealtimepidTsArr:
+			tablename = d.GetTablename("realtimepid")
+		case *data.RealtimeprocPgArr, *data.RealtimeprocTsArr:
+			tablename = d.GetTablename("realtimeproc")
+		case *data.RealtimediskPgArr, *data.RealtimediskTsArr:
+			tablename = d.GetTablename("realtimedisk")
+		case *data.RealtimenetPgArr, *data.RealtimenetTsArr:
+			tablename = d.GetTablename("realtimenet")
+		}
 
-	_, err = tx.Exec(fmt.Sprintf(data.InsertRealtimeProcPg, d.GetTablename("realtimeproc")), proc.GetArgs()...)
-	ErrorTx(err, tx)
-
-	tx.Commit()
-}
-
-func (d *DBHandler) SetPidTs(cspid *data.AgentRealTimePID, pid *data.RealtimepidTsArr, proc *data.RealtimeprocTsArr, agentid int) {
-	for _, p := range cspid.PerfList {
-		cmdid, userid, argid := d.GetProcId(&p)
-		pid.SetData(p, cspid.Agenttime, agentid, cmdid, userid, argid)
-		proc.SetData(p, cspid.Agenttime, agentid, cmdid, userid, argid)
+		_, err = tx.Exec(t.GetInsertStmt(tablename), t.GetArgs()...)
+		ErrorTx(err, tx)
 	}
-}
-
-func (d *DBHandler) InsertPidTs(pid *data.RealtimepidTsArr, proc *data.RealtimeprocTsArr) {
-	var err error
-	tx := d.db.MustBegin()
-	_, err = tx.Exec(fmt.Sprintf(data.InsertRealtimePidTs, d.GetTablename("realtimepid")), pid.GetArgs()...)
-	ErrorTx(err, tx)
-
-	_, err = tx.Exec(fmt.Sprintf(data.InsertRealtimeProcTs, d.GetTablename("realtimeproc")), proc.GetArgs()...)
-	ErrorTx(err, tx)
-
 	tx.Commit()
 }
 
-func (d *DBHandler) SetDiskPg(csdisk *data.AgentRealTimeDisk, disk *data.RealtimediskPgArr, agentid int) {
+func (d *DBHandler) SetDisk(csdisk *data.AgentRealTimeDisk, agentid int, tables ...data.TableArr) {
 	for _, p := range csdisk.PerfList {
 		ionameid, descid := d.GetDeviceId(p.Ioname, p.Descname)
-		disk.SetData(p, csdisk.Agenttime, agentid, ionameid, descid)
+		for _, t := range tables {
+			t.SetData(p, csdisk.Agenttime, agentid, ionameid, descid)
+		}
 	}
 }
 
-func (d *DBHandler) InsertDiskPg(disk *data.RealtimediskPgArr) {
-	tx := d.db.MustBegin()
-	var err error
-	_, err = tx.Exec(fmt.Sprintf(data.InsertRealtimeDiskPg, d.GetTablename("realtimedisk")), disk.GetArgs()...)
-	ErrorTx(err, tx)
-
-	tx.Commit()
-}
-
-func (d *DBHandler) SetDiskTs(csdisk *data.AgentRealTimeDisk, disk *data.RealtimediskTsArr, agentid int) {
-	for _, p := range csdisk.PerfList {
-		ionameid, descid := d.GetDeviceId(p.Ioname, p.Descname)
-		disk.SetData(p, csdisk.Agenttime, agentid, ionameid, descid)
-	}
-}
-
-func (d *DBHandler) InsertDiskTs(disk *data.RealtimediskTsArr) {
-	var err error
-	tx := d.db.MustBegin()
-	_, err = tx.Exec(fmt.Sprintf(data.InsertRealtimeDiskTs, d.GetTablename("realtimedisk")), disk.GetArgs()...)
-	ErrorTx(err, tx)
-
-	tx.Commit()
-}
-
-func (d *DBHandler) SetNetPg(csnet *data.AgentRealTimeNet, net *data.RealtimenetPgArr, agentid int) {
+func (d *DBHandler) SetNet(csnet *data.AgentRealTimeNet, agentid int, tables ...data.TableArr) {
 	for _, p := range csnet.PerfList {
 		ionameid, _ := d.GetDeviceId(p.Ioname, "")
-		net.SetData(p, csnet.Agenttime, agentid, ionameid)
+		for _, t := range tables {
+			t.SetData(p, csnet.Agenttime, agentid, ionameid)
+		}
 	}
-}
-
-func (d *DBHandler) InsertNetPg(net *data.RealtimenetPgArr) {
-	tx := d.db.MustBegin()
-	var err error
-	_, err = tx.Exec(fmt.Sprintf(data.InsertRealtimeNetPg, d.GetTablename("realtimenet")), net.GetArgs()...)
-	ErrorTx(err, tx)
-
-	tx.Commit()
-}
-
-func (d *DBHandler) SetNetTs(csnet *data.AgentRealTimeNet, net *data.RealtimenetTsArr, agentid int) {
-	for _, p := range csnet.PerfList {
-		ionameid, _ := d.GetDeviceId(p.Ioname, "")
-		net.SetData(p, csnet.Agenttime, agentid, ionameid)
-	}
-}
-
-func (d *DBHandler) InsertNetTs(net *data.RealtimenetTsArr) {
-	var err error
-	tx := d.db.MustBegin()
-	_, err = tx.Exec(fmt.Sprintf(data.InsertRealtimeNetTs, d.GetTablename("realtimenet")), net.GetArgs()...)
-	ErrorTx(err, tx)
-
-	tx.Commit()
 }
 
 func (d *DBHandler) GetProcId(cspidinner *data.AgentRealTimePIDInner) (int, int, int) {

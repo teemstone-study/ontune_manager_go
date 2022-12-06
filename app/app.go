@@ -1,6 +1,7 @@
 package app
 
 import (
+	"encoding/json"
 	"manager/data"
 )
 
@@ -18,6 +19,11 @@ type ConsumerStruct struct {
 	Realtimepid  chan *data.AgentRealTimePID
 	Realtimedisk chan *data.AgentRealTimeDisk
 	Realtimenet  chan *data.AgentRealTimeNet
+}
+
+type RealData struct {
+	Code uint32 `json:"code"`
+	Data string `json:"data"`
 }
 
 const (
@@ -72,4 +78,15 @@ func (c *ConsumerStruct) ConsumerInit() {
 	c.Realtimepid = make(chan *data.AgentRealTimePID)
 	c.Realtimedisk = make(chan *data.AgentRealTimeDisk)
 	c.Realtimenet = make(chan *data.AgentRealTimeNet)
+}
+
+func ConvertJson(code uint32, rdata string) []byte {
+	realData := RealData{}
+	realData.Code = code
+	realData.Data = rdata
+
+	json_data, err := json.Marshal(realData)
+	ErrorJson(err)
+
+	return json_data
 }

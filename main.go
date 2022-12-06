@@ -1,8 +1,6 @@
 package main
 
 import (
-	"encoding/json"
-	"log"
 	"manager/app"
 	"manager/data"
 )
@@ -50,26 +48,30 @@ func main() {
 	for {
 		select {
 		case state_agent_str := <-ch.ChangeStateAgentStr:
-			if tcpRequestKeys.Code == app.HOST_CODE {
-				agent_json, err := json.Marshal("A")
-				app.ErrorJson(err)
-				tcpResponseData <- agent_json
-			}
+			// 이 부분 TCP 데이터는 일단 넘기지 않고 추후 검토
 			for _, d := range db_handler {
 				d.DemoHostStateChange(state_agent_str)
 			}
 		case lrtp := <-ch.Lastrealtimeperf:
 			if tcpRequestKeys.Code == app.LASTPERF_CODE {
-				bpt_json, err := json.Marshal("L")
-				app.ErrorJson(err)
-				tcpResponseData <- bpt_json
+				for _, l := range lrtp.GetArrString() {
+					tcpResponseData <- app.ConvertJson(tcpRequestKeys.Code, l)
+				}
 			}
 			for _, d := range db_handler {
 				d.DemoBptUpdate(lrtp)
 			}
 		case cshost := <-ch.ConsumerData.Host:
-			for _, d := range db_handler {
-				d.SetHost(cshost)
+			for idx, d := range db_handler {
+				agentinfo_arr := data.AgentinfoArr{}
+				d.SetHost(cshost, &agentinfo_arr)
+
+				// TCP 데이터는 1회만 넘기도록 해야 함
+				if idx == 0 && tcpRequestKeys.Code == app.HOST_CODE {
+					for _, a := range agentinfo_arr.GetArrString() {
+						tcpResponseData <- app.ConvertJson(tcpRequestKeys.Code, a)
+					}
+				}
 			}
 		case csperf := <-ch.ConsumerData.Realtimeperf:
 			for idx, d := range db_handler {
@@ -86,19 +88,13 @@ func main() {
 					// TCP 데이터는 1회만 넘기도록 해야 함
 					if idx == 0 {
 						if tcpRequestKeys.Code == app.LASTPERF_CODE {
-							bpt_json, err := json.Marshal(lrtp.GetString())
-							app.ErrorJson(err)
-							tcpResponseData <- bpt_json
+							tcpResponseData <- app.ConvertJson(tcpRequestKeys.Code, lrtp.GetString())
 						}
 						if tcpRequestKeys.Code == app.BASIC_CODE {
-							perf_json, err := json.Marshal(perf.GetString())
-							app.ErrorJson(err)
-							tcpResponseData <- perf_json
+							tcpResponseData <- app.ConvertJson(tcpRequestKeys.Code, perf.GetString())
 						}
 						if tcpRequestKeys.Code == app.CPU_CODE {
-							cpu_json, err := json.Marshal(cpu.GetString())
-							app.ErrorJson(err)
-							tcpResponseData <- cpu_json
+							tcpResponseData <- app.ConvertJson(tcpRequestKeys.Code, cpu.GetString())
 						}
 					}
 
@@ -122,80 +118,62 @@ func main() {
 					pid := data.RealtimepidPgArr{}
 					proc := data.RealtimeprocPgArr{}
 
-					d.SetPidPg(cspid, &pid, &proc, agentid)
-					d.InsertPidPg(&pid, &proc)
+					d.SetPid(cspid, agentid, &pid, &proc)
+					d.InsertTableArr(&pid, &proc)
 				} else {
 					pid := data.RealtimepidTsArr{}
 					proc := data.RealtimeprocTsArr{}
 
-					d.SetPidTs(cspid, &pid, &proc, agentid)
-					d.InsertPidTs(&pid, &proc)
+					d.SetPid(cspid, agentid, &pid, &proc)
+					d.InsertTableArr(&pid, &proc)
 				}
 			}
 		case csdisk := <-ch.ConsumerData.Realtimedisk:
-			for _, d := range db_handler {
+			for idx, d := range db_handler {
 				agentid := d.SetEmptyAgentinfo(csdisk.AgentID)
 				dbtype := d.GetTabletype("realtimedisk")
 
 				if dbtype == "pg" {
 					disk := data.RealtimediskPgArr{}
 
-					d.SetDiskPg(csdisk, &disk, agentid)
+					d.SetDisk(csdisk, agentid, &disk)
 
-					if tcpRequestKeys.Code == app.DISK_CODE {
-						disk_json, err := json.Marshal("D")
-						app.ErrorJson(err)
-						tcpResponseData <- disk_json
+					if idx == 0 && tcpRequestKeys.Code == app.DISK_CODE {
+						for _, a := range disk.GetArrString() {
+							tcpResponseData <- app.ConvertJson(tcpRequestKeys.Code, a)
+						}
 					}
 
-					d.InsertDiskPg(&disk)
+					d.InsertTableArr(&disk)
 				} else {
 					disk := data.RealtimediskTsArr{}
 
-					d.SetDiskTs(csdisk, &disk, agentid)
-
-					if tcpRequestKeys.Code == app.DISK_CODE {
-						disk_json, err := json.Marshal("D")
-						app.ErrorJson(err)
-						tcpResponseData <- disk_json
-					}
-
-					d.InsertDiskTs(&disk)
+					d.SetDisk(csdisk, agentid, &disk)
+					d.InsertTableArr(&disk)
 				}
 			}
 		case csnet := <-ch.ConsumerData.Realtimenet:
-			for _, d := range db_handler {
+			for idx, d := range db_handler {
 				agentid := d.SetEmptyAgentinfo(csnet.AgentID)
 				dbtype := d.GetTabletype("realtimenet")
 
 				if dbtype == "pg" {
 					net := data.RealtimenetPgArr{}
 
-					d.SetNetPg(csnet, &net, agentid)
+					d.SetNet(csnet, agentid, &net)
 
-					if tcpRequestKeys.Code == app.NET_CODE {
-						net_json, err := json.Marshal("N")
-						if err != nil {
-							log.Println("JSON Data Conversion error")
+					if idx == 0 && tcpRequestKeys.Code == app.NET_CODE {
+						for _, a := range net.GetArrString() {
+							tcpResponseData <- app.ConvertJson(tcpRequestKeys.Code, a)
 						}
-						tcpResponseData <- net_json
 					}
 
-					d.InsertNetPg(&net)
+					d.InsertTableArr(&net)
 				} else {
 					net := data.RealtimenetTsArr{}
 
-					d.SetNetTs(csnet, &net, agentid)
-
-					if tcpRequestKeys.Code == app.NET_CODE {
-						net_json, err := json.Marshal("N")
-						if err != nil {
-							log.Println("JSON Data Conversion error")
-						}
-						tcpResponseData <- net_json
-					}
-
-					d.InsertNetTs(&net)
+					d.SetNet(csnet, agentid, &net)
+					d.InsertTableArr(&net)
 				}
 			}
 		case req_keys := <-tcpRequestChan:
