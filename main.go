@@ -45,9 +45,9 @@ func main() {
 				d.DemoHostStateChange(state_agent_str)
 			}
 		case lrtp := <-ch.Lastrealtimeperf:
-			if tcpRequestKeys.Code == app.LASTPERF_CODE {
+			if tcpRequestKeys.Code.IsSet(app.LASTPERF_CODE) {
 				for _, l := range lrtp.GetArrString() {
-					tcpResponseData <- app.ConvertJson(tcpRequestKeys.Code, l)
+					tcpResponseData <- app.ConvertJson(app.LASTPERF_CODE, l)
 				}
 			}
 			for _, d := range db_handler {
@@ -59,9 +59,9 @@ func main() {
 				d.SetHost(cshost, &agentinfo_arr)
 
 				// TCP 데이터는 1회만 넘기도록 해야 함
-				if idx == 0 && tcpRequestKeys.Code == app.HOST_CODE {
+				if idx == 0 && tcpRequestKeys.Code.IsSet(app.HOST_CODE) {
 					for _, a := range agentinfo_arr.GetArrString() {
-						tcpResponseData <- app.ConvertJson(tcpRequestKeys.Code, a)
+						tcpResponseData <- app.ConvertJson(app.HOST_CODE, a)
 					}
 				}
 			}
@@ -79,14 +79,14 @@ func main() {
 
 					// TCP 데이터는 1회만 넘기도록 해야 함
 					if idx == 0 {
-						if tcpRequestKeys.Code == app.LASTPERF_CODE {
-							tcpResponseData <- app.ConvertJson(tcpRequestKeys.Code, lrtp.GetString())
+						if tcpRequestKeys.Code.IsSet(app.LASTPERF_CODE) {
+							tcpResponseData <- app.ConvertJson(app.LASTPERF_CODE, lrtp.GetString())
 						}
-						if tcpRequestKeys.Code == app.BASIC_CODE {
-							tcpResponseData <- app.ConvertJson(tcpRequestKeys.Code, perf.GetString())
+						if tcpRequestKeys.Code.IsSet(app.BASIC_CODE) {
+							tcpResponseData <- app.ConvertJson(app.BASIC_CODE, perf.GetString())
 						}
-						if tcpRequestKeys.Code == app.CPU_CODE {
-							tcpResponseData <- app.ConvertJson(tcpRequestKeys.Code, cpu.GetString())
+						if tcpRequestKeys.Code.IsSet(app.CPU_CODE) {
+							tcpResponseData <- app.ConvertJson(app.CPU_CODE, cpu.GetString())
 						}
 					}
 
@@ -130,9 +130,9 @@ func main() {
 
 					d.SetDisk(csdisk, agentid, &disk)
 
-					if idx == 0 && tcpRequestKeys.Code == app.DISK_CODE {
+					if idx == 0 && tcpRequestKeys.Code.IsSet(app.DISK_CODE) {
 						for _, a := range disk.GetArrString() {
-							tcpResponseData <- app.ConvertJson(tcpRequestKeys.Code, a)
+							tcpResponseData <- app.ConvertJson(app.DISK_CODE, a)
 						}
 					}
 
@@ -154,9 +154,9 @@ func main() {
 
 					d.SetNet(csnet, agentid, &net)
 
-					if idx == 0 && tcpRequestKeys.Code == app.NET_CODE {
+					if idx == 0 && tcpRequestKeys.Code.IsSet(app.NET_CODE) {
 						for _, a := range net.GetArrString() {
-							tcpResponseData <- app.ConvertJson(tcpRequestKeys.Code, a)
+							tcpResponseData <- app.ConvertJson(app.NET_CODE, a)
 						}
 					}
 

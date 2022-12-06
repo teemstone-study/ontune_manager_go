@@ -29,12 +29,12 @@ type RealData struct {
 const (
 	DATAKEY_CODE  = 0x00000001
 	HOST_CODE     = 0x00000002
-	LASTPERF_CODE = 0x00000003
-	BASIC_CODE    = 0x00000004
-	CPU_CODE      = 0x00000005
-	MEM_CODE      = 0x00000006
-	NET_CODE      = 0x00000007
-	DISK_CODE     = 0x00000008
+	LASTPERF_CODE = 0x00000004
+	BASIC_CODE    = 0x00000008
+	CPU_CODE      = 0x00000010
+	MEM_CODE      = 0x00000020
+	NET_CODE      = 0x00000040
+	DISK_CODE     = 0x00000080
 )
 
 type DataKey struct {
@@ -43,7 +43,7 @@ type DataKey struct {
 }
 
 type DataCode struct {
-	Code uint32 `json:"code"`
+	Code Bitmask `json:"code"`
 }
 
 type Bitmask uint32

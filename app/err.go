@@ -8,7 +8,7 @@ import (
 
 func ErrorJson(err error, code uint32) {
 	if err != nil {
-		log.Printf("JSON Data Conversion error - %d\n", code)
+		log.Printf("JSON Data Conversion error - %v\n", code)
 	}
 }
 
