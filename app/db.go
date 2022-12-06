@@ -253,7 +253,9 @@ func (d *DBHandler) SetHost(cshost *data.AgentHostAgentInfo, agentinfo_arr *data
 		agent_data := []data.Agentinfo{}
 		d.db.Select(&agent_data, "SELECT * FROM agentinfo where _enabled=1 and _hostname=$1", cshost.AgentName)
 
-		agentinfo_arr.SetData(agent_data)
+		for _, a := range agent_data {
+			agentinfo_arr.SetData(a)
+		}
 	} else {
 		// Not Exists
 		d.SetHostinfo(cshost, agentinfo_arr)

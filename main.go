@@ -18,16 +18,8 @@ func main() {
 
 	ch := app.ChannelStruct{}
 	ch.ChannelInit()
-	//consumer := app.KafkaConsumerControllerInit(&kafkaconfig, "host")
-	//paritionList := app.KafkaConsumerControllerPartition(&kafkaconfig, consumer, "host")
 
 	go app.TcpProcessing(tcpRequestChan, tcpResponseData, config.ApiServerInfo)
-
-	// go app.ConsumerHost(ch.ConsumerData.Host, kafkaconfig, paritionList)
-	// go app.ConsumerPerf(ch.ConsumerData.Realtimeperf, kafkaconfig, paritionList)
-	// go app.ConsumerPid(ch.ConsumerData.Realtimepid, kafkaconfig, paritionList)
-	// go app.ConsumerDisk(ch.ConsumerData.Realtimedisk, kafkaconfig, paritionList)
-	// go app.ConsumerNet(ch.ConsumerData.Realtimenet, kafkaconfig, paritionList)
 
 	app.ConsumerHostGroup(ch.ConsumerData.Host, kafkaconfig)
 	app.ConsumerPerfGroup(ch.ConsumerData.Realtimeperf, kafkaconfig)

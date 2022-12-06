@@ -14,7 +14,7 @@ func ErrorJson(err error) {
 
 func ErrorTx(err error, tx *sqlx.Tx) {
 	if err != nil {
-		log.Println(err)
+		//log.Println(err)
 		tx.Rollback()
 		return
 	}
