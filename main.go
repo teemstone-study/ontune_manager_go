@@ -40,9 +40,14 @@ func main() {
 	for {
 		select {
 		case state_agent_str := <-ch.ChangeStateAgentStr:
-			// 이 부분 TCP 데이터는 일단 넘기지 않고 추후 검토
+			// 이 부분 TCP 데이터는 일단 넘기도록 하나, 아래의 Host 정보와 넘기는 형식은 다름
+			// 여기에서는 변경될 Agent ID만 넘기는 형태가 됨
 			for _, d := range db_handler {
 				//fmt.Printf("change state before %d %d\n", idx, time.Now().UnixMicro())
+				if tcpRequestKeys.IsDataMapping(app.HOST_CODE) {
+					tcpResponseData <- app.ConvertJson(app.HOST_CODE, state_agent_str)
+				}
+
 				d.DemoHostStateChange(state_agent_str)
 				//fmt.Printf("change state after %d %d\n", idx, time.Now().UnixMicro())
 			}
