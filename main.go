@@ -73,7 +73,7 @@ func main() {
 			}
 		case csperf := <-ch.ConsumerData.Realtimeperf:
 			for idx, d := range db_handler {
-				agentid := d.SetEmptyAgentinfo(csperf.AgentID)
+				agentid := d.GetAgentId(csperf.AgentID)
 				dbtype := d.GetTabletype("realtimeperf")
 
 				if dbtype == "pg" {
@@ -115,7 +115,7 @@ func main() {
 		case cspid := <-ch.ConsumerData.Realtimepid:
 			for _, d := range db_handler {
 				// Check Agent
-				agentid := d.SetEmptyAgentinfo(cspid.AgentID)
+				agentid := d.GetAgentId(cspid.AgentID)
 				dbtype := d.GetTabletype("realtimepid")
 
 				if dbtype == "pg" {
@@ -140,7 +140,7 @@ func main() {
 			}
 		case csdisk := <-ch.ConsumerData.Realtimedisk:
 			for idx, d := range db_handler {
-				agentid := d.SetEmptyAgentinfo(csdisk.AgentID)
+				agentid := d.GetAgentId(csdisk.AgentID)
 				dbtype := d.GetTabletype("realtimedisk")
 
 				if dbtype == "pg" {
@@ -170,7 +170,7 @@ func main() {
 			}
 		case csnet := <-ch.ConsumerData.Realtimenet:
 			for idx, d := range db_handler {
-				agentid := d.SetEmptyAgentinfo(csnet.AgentID)
+				agentid := d.GetAgentId(csnet.AgentID)
 				dbtype := d.GetTabletype("realtimenet")
 
 				if dbtype == "pg" {
