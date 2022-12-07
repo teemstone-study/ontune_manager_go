@@ -475,13 +475,17 @@ func (d *DBHandler) InsertTableArr(tables ...data.TableGet) {
 	for _, t := range tables {
 		var tablename string
 		switch t.(type) {
-		case *data.RealtimepidPgArr, *data.RealtimepidTsArr:
+		case *data.RealtimeperfPgArray, *data.RealtimeperfTsArray:
+			tablename = d.GetTablename("realtimeperf")
+		case *data.RealtimecpuPgArray, *data.RealtimecpuTsArray:
+			tablename = d.GetTablename("realtimecpu")
+		case *data.RealtimepidPgArray, *data.RealtimepidTsArray, *data.RealtimepidPgArr, *data.RealtimepidTsArr:
 			tablename = d.GetTablename("realtimepid")
-		case *data.RealtimeprocPgArr, *data.RealtimeprocTsArr:
+		case *data.RealtimeprocPgArray, *data.RealtimeprocTsArray, *data.RealtimeprocPgArr, *data.RealtimeprocTsArr:
 			tablename = d.GetTablename("realtimeproc")
-		case *data.RealtimediskPgArr, *data.RealtimediskTsArr:
+		case *data.RealtimediskPgArray, *data.RealtimediskTsArray, *data.RealtimediskPgArr, *data.RealtimediskTsArr:
 			tablename = d.GetTablename("realtimedisk")
-		case *data.RealtimenetPgArr, *data.RealtimenetTsArr:
+		case *data.RealtimenetPgArray, *data.RealtimenetTsArray, *data.RealtimenetPgArr, *data.RealtimenetTsArr:
 			tablename = d.GetTablename("realtimenet")
 		}
 
