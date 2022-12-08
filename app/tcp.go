@@ -21,7 +21,7 @@ func TcpProcessing(reqChan chan<- *DataKey, resChan chan []byte, apiserver ApiSe
 	for {
 		conn, err := ln.Accept()
 		if err != nil {
-			log.Panic()
+			log.Println("Connection Closed")
 			continue
 		}
 

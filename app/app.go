@@ -91,3 +91,67 @@ func ConvertJson(code uint32, rdata string) []byte {
 
 	return json_data
 }
+
+func RemoveDuplicate(arr interface{}) interface{} {
+	arr_map := make(map[string]struct{})
+
+	switch arr.(type) {
+	case []data.AgentRealTimePerf:
+		result_arr := make([]data.AgentRealTimePerf, 0)
+		for _, a := range arr.([]data.AgentRealTimePerf) {
+			flag := a.AgentID + "_" + a.Agenttime.Format("060102030405")
+			if _, ok := arr_map[flag]; ok {
+				continue
+			} else {
+				arr_map[flag] = struct{}{}
+				result_arr = append(result_arr, a)
+			}
+		}
+
+		return result_arr
+
+	case []data.AgentRealTimePID:
+		result_arr := make([]data.AgentRealTimePID, 0)
+		for _, a := range arr.([]data.AgentRealTimePID) {
+			flag := a.AgentID + "_" + a.Agenttime.Format("060102030405")
+			if _, ok := arr_map[flag]; ok {
+				continue
+			} else {
+				arr_map[flag] = struct{}{}
+				result_arr = append(result_arr, a)
+			}
+		}
+
+		return result_arr
+
+	case []data.AgentRealTimeDisk:
+		result_arr := make([]data.AgentRealTimeDisk, 0)
+		for _, a := range arr.([]data.AgentRealTimeDisk) {
+			flag := a.AgentID + "_" + a.Agenttime.Format("060102030405")
+			if _, ok := arr_map[flag]; ok {
+				continue
+			} else {
+				arr_map[flag] = struct{}{}
+				result_arr = append(result_arr, a)
+			}
+		}
+
+		return result_arr
+
+	case []data.AgentRealTimeNet:
+		result_arr := make([]data.AgentRealTimeNet, 0)
+		for _, a := range arr.([]data.AgentRealTimeNet) {
+			flag := a.AgentID + "_" + a.Agenttime.Format("060102030405")
+			if _, ok := arr_map[flag]; ok {
+				continue
+			} else {
+				arr_map[flag] = struct{}{}
+				result_arr = append(result_arr, a)
+			}
+		}
+
+		return result_arr
+	}
+
+	return nil
+}

@@ -89,10 +89,12 @@ func main() {
 		case csperf := <-ch.ConsumerData.Realtimeperf:
 			current_time.Host = int64(time.Unix(time.Now().Unix(), 0).Unix() / 2)
 
-			if len(perf_arr) > 0 && current_time.Host != previous_time.Host {
+			if len(perf_arr) > 0 && current_time.Host > previous_time.Host {
 				//fmt.Printf("perf %d\n", len(perf_arr))
 				for idx, d := range db_handler {
 					//agentid := d.GetAgentId(csperf.AgentID)
+					perf_arr = app.RemoveDuplicate(perf_arr).([]data.AgentRealTimePerf)
+
 					dbtype := d.GetTabletype("realtimeperf")
 
 					if dbtype == "pg" {
@@ -140,8 +142,10 @@ func main() {
 		case cspid := <-ch.ConsumerData.Realtimepid:
 			current_time.Pid = int64(time.Unix(time.Now().Unix(), 0).Unix() / 2)
 
-			if len(pid_arr) > 0 && current_time.Pid != previous_time.Pid {
+			if len(pid_arr) > 0 && current_time.Pid > previous_time.Pid {
 				//fmt.Printf("pid %d\n", len(pid_arr))
+				pid_arr = app.RemoveDuplicate(pid_arr).([]data.AgentRealTimePID)
+
 				for idx, d := range db_handler {
 					// Check Agent
 					dbtype := d.GetTabletype("realtimepid")
@@ -175,8 +179,10 @@ func main() {
 		case csdisk := <-ch.ConsumerData.Realtimedisk:
 			current_time.Disk = int64(time.Unix(time.Now().Unix(), 0).Unix() / 2)
 
-			if len(disk_arr) > 0 && current_time.Disk != previous_time.Disk {
+			if len(disk_arr) > 0 && current_time.Disk > previous_time.Disk {
 				//fmt.Printf("disk %d\n", len(disk_arr))
+				disk_arr = app.RemoveDuplicate(disk_arr).([]data.AgentRealTimeDisk)
+
 				for idx, d := range db_handler {
 					dbtype := d.GetTabletype("realtimedisk")
 
@@ -212,8 +218,10 @@ func main() {
 		case csnet := <-ch.ConsumerData.Realtimenet:
 			current_time.Net = int64(time.Unix(time.Now().Unix(), 0).Unix() / 2)
 
-			if len(net_arr) > 0 && current_time.Net != previous_time.Pid {
+			if len(net_arr) > 0 && current_time.Net > previous_time.Pid {
 				//fmt.Printf("net %d\n", len(net_arr))
+				net_arr = app.RemoveDuplicate(net_arr).([]data.AgentRealTimeNet)
+
 				for idx, d := range db_handler {
 					dbtype := d.GetTabletype("realtimenet")
 
