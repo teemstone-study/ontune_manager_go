@@ -3,7 +3,6 @@ package app
 import (
 	"encoding/json"
 	"manager/data"
-	"time"
 )
 
 type ChannelStruct struct {
@@ -28,10 +27,10 @@ type RealData struct {
 }
 
 type ConsumerTime struct {
-	Host time.Time
-	Pid  time.Time
-	Disk time.Time
-	Net  time.Time
+	Host int64
+	Pid  int64
+	Disk int64
+	Net  int64
 }
 
 const (
