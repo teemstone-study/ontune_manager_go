@@ -161,7 +161,7 @@ func (d *DBHandler) DemoHostSetting(arr *data.AgentinfoArr) {
 	if exist_count < d.demo.HostCount {
 		tx := d.db.MustBegin()
 		tx.MustExec(data.DeleteAgentinfoDummy)
-		tx.MustExec(data.InsertAgentinfoUnnest, arr.GetArgs()...)
+		tx.MustExec(data.InsertAgentinfo, arr.GetArgs()...)
 		tx.Commit()
 	}
 }
@@ -180,7 +180,7 @@ func (d *DBHandler) DemoBptUpdate(arr *data.LastrealtimeperfArr) {
 	tx := d.db.MustBegin()
 	tx.MustExec(data.DeleteLastrealtimeperfAll, d.demo.HostCount)
 
-	tx.MustExec(data.DemoInsertLastrealtimeperf, arr.GetArgs()...)
+	tx.MustExec(data.InsertLastrealtimeperf, arr.GetArgs()...)
 	tx.Commit()
 }
 
@@ -334,7 +334,7 @@ func (d *DBHandler) SetHostinfo(new_agent *data.AgentHostAgentInfo, agentinfo_ar
 	agentinfo_arr.SetData(*new_data)
 
 	tx := d.db.MustBegin()
-	tx.MustExec(data.InsertAgentinfoUnnest, agentinfo_arr.GetArgs()...)
+	tx.MustExec(data.InsertAgentinfo, agentinfo_arr.GetArgs()...)
 	tx.Commit()
 
 	return new_agentid
@@ -367,67 +367,14 @@ func (d *DBHandler) GetAgentId(agentname string) int {
 	return agentid
 }
 
-func (d *DBHandler) SetPerf(csperf *data.AgentRealTimePerf, agentid int, tables ...data.Table) {
-	// Set Lastrealtimeperf
-	for _, t := range tables {
-		t.SetData(csperf, agentid)
-	}
-}
-
-func (d *DBHandler) InsertPerf(agentid int, tables ...data.Table) {
-	var err error
-	tx := d.db.MustBegin()
-
-	for _, t := range tables {
-		var tablename string
-		switch t.(type) {
-		case *data.Lastrealtimeperf:
-			tablename = d.GetTablename("lastrealtimeperf")
-			tx.MustExec(data.DeleteLastrealtimeperf, agentid)
-		case *data.RealtimeperfPg, *data.RealtimeperfTs:
-			tablename = d.GetTablename("realtimeperf")
-		case *data.RealtimecpuPg, *data.RealtimecpuTs:
-			tablename = d.GetTablename("realtimecpu")
-		}
-
-		_, err = tx.Exec(t.GetInsertStmt(tablename), t.GetArgs()...)
-		ErrorTx(err, tx)
-	}
-	tx.Commit()
-}
-
 func (d *DBHandler) SetPerfArray(arr *[]data.AgentRealTimePerf, tables ...data.TableSetArray) {
 	for _, t := range tables {
 		for _, a := range *arr {
+			// switch t.(type) {
+			// case *data.LastrealtimeperfArray:
+			// }
 			agentid := d.GetAgentId(a.AgentID)
-			t.SetData(arr, agentid)
-		}
-	}
-}
-
-func (d *DBHandler) SetPid(cspid *data.AgentRealTimePID, agentid int, tables ...data.TableSetArr) {
-	for _, p := range cspid.PerfList {
-		cmdid, userid, argid := d.GetProcId(&p)
-		for _, t := range tables {
-			t.SetData(p, cspid.Agenttime, agentid, cmdid, userid, argid)
-		}
-	}
-}
-
-func (d *DBHandler) SetDisk(csdisk *data.AgentRealTimeDisk, agentid int, tables ...data.TableSetArr) {
-	for _, p := range csdisk.PerfList {
-		ionameid, descid := d.GetDeviceId(p.Ioname, p.Descname)
-		for _, t := range tables {
-			t.SetData(p, csdisk.Agenttime, agentid, ionameid, descid)
-		}
-	}
-}
-
-func (d *DBHandler) SetNet(csnet *data.AgentRealTimeNet, agentid int, tables ...data.TableSetArr) {
-	for _, p := range csnet.PerfList {
-		ionameid, _ := d.GetDeviceId(p.Ioname, "")
-		for _, t := range tables {
-			t.SetData(p, csnet.Agenttime, agentid, ionameid)
+			t.SetData(a, agentid)
 		}
 	}
 }
@@ -468,28 +415,38 @@ func (d *DBHandler) SetNetArray(arr *[]data.AgentRealTimeNet, tables ...data.Tab
 	}
 }
 
-func (d *DBHandler) InsertTableArr(tables ...data.TableGet) {
+func (d *DBHandler) InsertTableArray(dbtype string, tables ...data.TableGet) {
 	var err error
 	tx := d.db.MustBegin()
 
 	for _, t := range tables {
 		var tablename string
 		switch t.(type) {
+		case *data.LastrealtimeperfArray:
+			tablename = d.GetTablename("lastrealtimeperf")
 		case *data.RealtimeperfPgArray, *data.RealtimeperfTsArray:
 			tablename = d.GetTablename("realtimeperf")
 		case *data.RealtimecpuPgArray, *data.RealtimecpuTsArray:
 			tablename = d.GetTablename("realtimecpu")
-		case *data.RealtimepidPgArray, *data.RealtimepidTsArray, *data.RealtimepidPgArr, *data.RealtimepidTsArr:
+		case *data.RealtimepidPgArray, *data.RealtimepidTsArray:
 			tablename = d.GetTablename("realtimepid")
-		case *data.RealtimeprocPgArray, *data.RealtimeprocTsArray, *data.RealtimeprocPgArr, *data.RealtimeprocTsArr:
+		case *data.RealtimeprocPgArray, *data.RealtimeprocTsArray:
 			tablename = d.GetTablename("realtimeproc")
-		case *data.RealtimediskPgArray, *data.RealtimediskTsArray, *data.RealtimediskPgArr, *data.RealtimediskTsArr:
+		case *data.RealtimediskPgArray, *data.RealtimediskTsArray:
 			tablename = d.GetTablename("realtimedisk")
-		case *data.RealtimenetPgArray, *data.RealtimenetTsArray, *data.RealtimenetPgArr, *data.RealtimenetTsArr:
+		case *data.RealtimenetPgArray, *data.RealtimenetTsArray:
 			tablename = d.GetTablename("realtimenet")
 		}
 
-		_, err = tx.Exec(t.GetInsertStmt(tablename), t.GetArgs()...)
+		var timetype string
+		switch dbtype {
+		case "pg":
+			timetype = "int"
+		case "ts":
+			timetype = "timestamptz"
+		}
+
+		_, err = tx.Exec(t.GetInsertStmt(tablename, timetype), t.GetArgs()...)
 		ErrorTx(err, tx)
 	}
 	tx.Commit()

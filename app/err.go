@@ -12,9 +12,10 @@ func ErrorJson(err error, code uint32) {
 	}
 }
 
-func ErrorTx(err error, tx *sqlx.Tx) {
+func ErrorTx(err error, tx *sqlx.Tx, debug ...interface{}) {
 	if err != nil {
 		//log.Println(err)
+		//log.Printf("%v\n", debug)
 		tx.Rollback()
 		return
 	}

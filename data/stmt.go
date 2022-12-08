@@ -422,7 +422,7 @@ UPDATE agentinfo
    and _connected=0
 `
 
-var DemoInsertLastrealtimeperf = `
+var InsertLastrealtimeperf = `
 INSERT INTO lastrealtimeperf 
 (select * from unnest($1::int[], $2::int[], $3::text[], $4::int[], $5::int[], $6::int[], $7::int[], 
 	$8::int[], $9::int[], $10::int[], $11::int[], $12::int[], $13::int[], $14::int[], $15::int[], 
@@ -434,7 +434,7 @@ INSERT INTO lastrealtimeperf
 	$53::int[], $54::int[], $55::int[], $56::int[], $57::int[], $58::int[]))
 `
 
-var InsertAgentinfoUnnest = `
+var InsertAgentinfo = `
 INSERT INTO agentinfo 
 (select * from unnest($1::int[], $2::text[], $3::text[], $4::int[], $5::int[], $6::int[],
 	$7::int[], $8::int[], $9::int[], $10::int[], $11::int[], $12::int[], $13::int[], $14::int[], 
@@ -453,35 +453,15 @@ UPDATE agentinfo
  WHERE _hostname=$12
 `
 
-var InsertRealtimePerf = `
-INSERT INTO %s
-VALUES (
-	$1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,
-	$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,$38,$39,$40,
-	$41,$42,$43,$44,$45,$46,$47,$48,$49,$50,$51,$52,$53,$54,$55,$56,$57,$58,$59
-)
-`
-
-var InsertLastRealtimePerf = `
-INSERT INTO lastrealtimeperf
-VALUES (
-	$1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,
-	$21,$22,$23,$24,$25,$26,$27
-)
-`
-
 var DeleteLastrealtimeperf = `
 DELETE FROM lastrealtimeperf where _agentid=$1
 `
 
-var InsertRealtimeCpu = `
-INSERT INTO %s
-VALUES (
-	$1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14
-)
+var InsertSimpleTable = `
+INSERT INTO %s (_name) values ($1)
 `
 
-var InsertRealtimePerfUnnest = `
+var InsertRealtimePerf = `
 INSERT INTO %s
 (select * from unnest(
 	$1::%s[],$2::int[],$3::int[],$4::int[],$5::int[],$6::int[],$7::int[],$8::int[],$9::int[],$10::int[],$11::int[],$12::int[],$13::int[],$14::int[],$15::int[],$16::int[],$17::int[],$18::int[],$19::int[],$20::int[],
@@ -490,21 +470,17 @@ INSERT INTO %s
 ))
 `
 
-var InsertRealtimeCpuUnnest = `
+var InsertRealtimeCpu = `
 INSERT INTO %s
 (select * from unnest(
-	$1::int[],$2::int[],$3::int[],$4::int[],$5::int[],$6::int[],$7::int[],$8::int[],$9::int[],$10::int[],$11::int[],$12::int[],$13::int[],$14::int[]
+	$1::%s[],$2::int[],$3::int[],$4::int[],$5::int[],$6::int[],$7::int[],$8::int[],$9::int[],$10::int[],$11::int[],$12::int[],$13::int[],$14::int[]
 ))
-`
-
-var InsertSimpleTable = `
-INSERT INTO %s (_name) values ($1)
 `
 
 var InsertRealtimePid = `
 INSERT INTO %s
 (select * from unnest(
-	$1::int[],$2::int[],$3::int[],$4::int[],$5::int[],$6::int[],$7::int[],
+	$1::%s[],$2::int[],$3::int[],$4::int[],$5::int[],$6::int[],$7::int[],
 	$8::int[],$9::int[],$10::int[],$11::int[],$12::int[],$13::int[],$14::int[],
 	$15::int[],$16::int[],$17::int[],$18::int[],$19::int[],$20::int[],$21::int[],$22::int[]
 ))
@@ -513,7 +489,7 @@ INSERT INTO %s
 var InsertRealtimeProc = `
 INSERT INTO %s
 (select * from unnest(
-	$1::int[],$2::int[],$3::int[],$4::int[],$5::int[],$6::int[],$7::int[],
+	$1::%s[],$2::int[],$3::int[],$4::int[],$5::int[],$6::int[],$7::int[],
 	$8::int[],$9::int[],$10::int[],$11::int[],$12::int[],$13::int[],$14::int[],
 	$15::int[],$16::int[]
 ))
@@ -522,7 +498,7 @@ INSERT INTO %s
 var InsertRealtimeDisk = `
 INSERT INTO %s
 (select * from unnest(
-	$1::int[],$2::int[],$3::int[],$4::int[],$5::int[],$6::int[],$7::int[],
+	$1::%s[],$2::int[],$3::int[],$4::int[],$5::int[],$6::int[],$7::int[],
 	$8::int[],$9::int[],$10::int[],$11::int[]
 ))
 `
@@ -530,7 +506,7 @@ INSERT INTO %s
 var InsertRealtimeNet = `
 INSERT INTO %s
 (select * from unnest(
-	$1::int[],$2::int[],$3::int[],$4::int[],$5::int[],$6::int[],$7::int[],
+	$1::%s[],$2::int[],$3::int[],$4::int[],$5::int[],$6::int[],$7::int[],
 	$8::int[],$9::int[],$10::int[]
 ))
 `
