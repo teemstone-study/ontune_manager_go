@@ -107,7 +107,7 @@ func (r *LastrealtimeperfArray) SetData(data interface{}, agentid int, strs ...s
 	r.Maxswap = append(r.Maxswap, 0)
 	r.Maxdisk = append(r.Maxdisk, 0)
 	r.Diskiops = append(r.Diskiops, d.DiskIOPS)
-	r.Networkiops = append(r.Networkiops)
+	r.Networkiops = append(r.Networkiops, 0)
 	r.Dummy01 = append(r.Dummy01, 0)
 	r.Dummy02 = append(r.Dummy02, 0)
 	r.Dummy03 = append(r.Dummy03, 0)
