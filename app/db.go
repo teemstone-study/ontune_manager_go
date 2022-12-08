@@ -367,50 +367,87 @@ func (d *DBHandler) GetAgentId(agentname string) int {
 	return agentid
 }
 
-func (d *DBHandler) SetPerfArray(arr *[]data.AgentRealTimePerf, tables ...data.TableSetArray) {
+func (d *DBHandler) SetPerfArray(arr *[]data.AgentRealTimePerf, dbtype string, tables ...data.TableSetArray) {
 	for _, t := range tables {
 		for _, a := range *arr {
 			// switch t.(type) {
 			// case *data.LastrealtimeperfArray:
 			// }
 			agentid := d.GetAgentId(a.AgentID)
-			t.SetData(a, agentid)
+			t.SetData(a, dbtype, agentid)
 		}
 	}
 }
 
-func (d *DBHandler) SetPidArray(arr *[]data.AgentRealTimePID, tables ...data.TableSetArrayInner) {
+func (d *DBHandler) SetPerf(agent *data.AgentRealTimePerf, dbtype string, tables ...data.TableSetArray) {
+	for _, t := range tables {
+		agentid := d.GetAgentId(agent.AgentID)
+		t.SetData(*agent, dbtype, agentid)
+	}
+}
+
+func (d *DBHandler) SetPidArray(arr *[]data.AgentRealTimePID, dbtype string, tables ...data.TableSetArrayInner) {
 	for _, t := range tables {
 		for _, a := range *arr {
 			agentid := d.GetAgentId(a.AgentID)
 			for _, p := range a.PerfList {
 				cmdid, userid, argid := d.GetProcId(&p)
-				t.SetData(p, agentid, a.Agenttime, cmdid, userid, argid)
+				t.SetData(p, dbtype, agentid, a.Agenttime, cmdid, userid, argid)
 			}
 		}
 	}
 }
 
-func (d *DBHandler) SetDiskArray(arr *[]data.AgentRealTimeDisk, tables ...data.TableSetArrayInner) {
+func (d *DBHandler) SetPid(agent *data.AgentRealTimePID, dbtype string, tables ...data.TableSetArrayInner) {
+	for _, t := range tables {
+		agentid := d.GetAgentId(agent.AgentID)
+		for _, p := range agent.PerfList {
+			cmdid, userid, argid := d.GetProcId(&p)
+			t.SetData(p, dbtype, agentid, agent.Agenttime, cmdid, userid, argid)
+		}
+	}
+}
+
+func (d *DBHandler) SetDiskArray(arr *[]data.AgentRealTimeDisk, dbtype string, tables ...data.TableSetArrayInner) {
 	for _, t := range tables {
 		for _, a := range *arr {
 			agentid := d.GetAgentId(a.AgentID)
 			for _, p := range a.PerfList {
 				ionameid, descid := d.GetDeviceId(p.Ioname, p.Descname)
-				t.SetData(p, agentid, a.Agenttime, ionameid, descid)
+				t.SetData(p, dbtype, agentid, a.Agenttime, ionameid, descid)
 			}
 		}
 	}
 }
 
-func (d *DBHandler) SetNetArray(arr *[]data.AgentRealTimeNet, tables ...data.TableSetArrayInner) {
+func (d *DBHandler) SetDisk(agent *data.AgentRealTimeDisk, dbtype string, tables ...data.TableSetArrayInner) {
+	for _, t := range tables {
+		agentid := d.GetAgentId(agent.AgentID)
+		for _, p := range agent.PerfList {
+			ionameid, descid := d.GetDeviceId(p.Ioname, p.Descname)
+			t.SetData(p, dbtype, agentid, agent.Agenttime, ionameid, descid)
+		}
+	}
+}
+
+func (d *DBHandler) SetNetArray(arr *[]data.AgentRealTimeNet, dbtype string, tables ...data.TableSetArrayInner) {
 	for _, t := range tables {
 		for _, a := range *arr {
 			agentid := d.GetAgentId(a.AgentID)
 			for _, p := range a.PerfList {
 				ionameid, _ := d.GetDeviceId(p.Ioname, "")
-				t.SetData(p, agentid, a.Agenttime, ionameid)
+				t.SetData(p, dbtype, agentid, a.Agenttime, ionameid)
 			}
+		}
+	}
+}
+
+func (d *DBHandler) SetNet(agent *data.AgentRealTimeNet, dbtype string, tables ...data.TableSetArrayInner) {
+	for _, t := range tables {
+		agentid := d.GetAgentId(agent.AgentID)
+		for _, p := range agent.PerfList {
+			ionameid, _ := d.GetDeviceId(p.Ioname, "")
+			t.SetData(p, dbtype, agentid, agent.Agenttime, ionameid)
 		}
 	}
 }
@@ -424,29 +461,21 @@ func (d *DBHandler) InsertTableArray(dbtype string, tables ...data.TableGet) {
 		switch t.(type) {
 		case *data.LastrealtimeperfArray:
 			tablename = d.GetTablename("lastrealtimeperf")
-		case *data.RealtimeperfPgArray, *data.RealtimeperfTsArray:
+		case *data.RealtimeperfArray:
 			tablename = d.GetTablename("realtimeperf")
-		case *data.RealtimecpuPgArray, *data.RealtimecpuTsArray:
+		case *data.RealtimecpuArray:
 			tablename = d.GetTablename("realtimecpu")
-		case *data.RealtimepidPgArray, *data.RealtimepidTsArray:
+		case *data.RealtimepidArray:
 			tablename = d.GetTablename("realtimepid")
-		case *data.RealtimeprocPgArray, *data.RealtimeprocTsArray:
+		case *data.RealtimeprocArray:
 			tablename = d.GetTablename("realtimeproc")
-		case *data.RealtimediskPgArray, *data.RealtimediskTsArray:
+		case *data.RealtimediskArray:
 			tablename = d.GetTablename("realtimedisk")
-		case *data.RealtimenetPgArray, *data.RealtimenetTsArray:
+		case *data.RealtimenetArray:
 			tablename = d.GetTablename("realtimenet")
 		}
 
-		var timetype string
-		switch dbtype {
-		case "pg":
-			timetype = "int"
-		case "ts":
-			timetype = "timestamptz"
-		}
-
-		_, err = tx.Exec(t.GetInsertStmt(tablename, timetype), t.GetArgs()...)
+		_, err = tx.Exec(t.GetInsertStmt(tablename, dbtype), t.GetArgs()...)
 		ErrorTx(err, tx)
 	}
 	tx.Commit()

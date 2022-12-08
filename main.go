@@ -20,10 +20,6 @@ func main() {
 
 	current_time := app.ConsumerTime{}
 	previous_time := app.ConsumerTime{}
-	perf_arr := make([]data.AgentRealTimePerf, 0)
-	pid_arr := make([]data.AgentRealTimePID, 0)
-	disk_arr := make([]data.AgentRealTimeDisk, 0)
-	net_arr := make([]data.AgentRealTimeNet, 0)
 
 	ch := app.ChannelStruct{}
 	ch.ChannelInit()
@@ -46,19 +42,37 @@ func main() {
 		db_handler = append(db_handler, *app.DBInit(dbinfo, config.Demo, agentinfo))
 	}
 
+	con_perf_arr := make([]data.AgentRealTimePerf, 0)
+	con_pid_arr := make([]data.AgentRealTimePID, 0)
+	con_disk_arr := make([]data.AgentRealTimeDisk, 0)
+	con_net_arr := make([]data.AgentRealTimeNet, 0)
+
+	dbdata := make([]app.DBDataStruct, len(db_handler))
+	for i := 0; i < len(db_handler); i++ {
+		dbdata[i] = app.DBDataStruct{
+			Last: &data.LastrealtimeperfArray{},
+			Perf: &data.RealtimeperfArray{},
+			Cpu:  &data.RealtimecpuArray{},
+			Pid:  &data.RealtimepidArray{},
+			Proc: &data.RealtimeprocArray{},
+			Disk: &data.RealtimediskArray{},
+			Net:  &data.RealtimenetArray{},
+		}
+	}
+
 	for {
 		select {
 		case state_agent_str := <-ch.ChangeStateAgentStr:
 			// 이 부분 TCP 데이터는 일단 넘기도록 하나, 아래의 Host 정보와 넘기는 형식은 다름
 			// 여기에서는 변경될 Agent ID만 넘기는 형태가 됨
 			for _, d := range db_handler {
-				//fmt.Printf("change state before %d %d %d\n", idx, len(net_arr), time.Now().UnixMicro())
+				//fmt.Printf("change state before %d %d %d\n", idx, len(con_net_arr), time.Now().UnixMicro())
 				if tcpRequestKeys.IsDataMapping(app.HOST_CODE) {
 					tcpResponseData <- app.ConvertJson(app.HOST_CODE, state_agent_str)
 				}
 
 				d.DemoHostStateChange(state_agent_str)
-				//fmt.Printf("change state after %d %d %d\n", idx, len(net_arr), time.Now().UnixMicro())
+				//fmt.Printf("change state after %d %d %d\n", idx, len(con_net_arr), time.Now().UnixMicro())
 			}
 		case lrtp := <-ch.Lastrealtimeperf:
 			if tcpRequestKeys.IsDataMapping(app.LASTPERF_CODE) {
@@ -67,17 +81,17 @@ func main() {
 				}
 			}
 			for _, d := range db_handler {
-				//fmt.Printf("lastrealtimeperf before %v %d %d\n", idx, len(net_arr), time.Now().UnixMicro())
+				//fmt.Printf("lastrealtimeperf before %v %d %d\n", idx, len(con_net_arr), time.Now().UnixMicro())
 				d.DemoBptUpdate(lrtp)
-				//fmt.Printf("lastrealtimeperf after %v %d %d\n", idx, len(net_arr), time.Now().UnixMicro())
+				//fmt.Printf("lastrealtimeperf after %v %d %d\n", idx, len(con_net_arr), time.Now().UnixMicro())
 			}
 		case cshost := <-ch.ConsumerData.Host:
 			for idx, d := range db_handler {
 				agentinfo_arr := data.AgentinfoArr{}
-				//fmt.Printf("agent host before %v %d %d\n", idx, len(net_arr), time.Now().UnixMicro())
+				//fmt.Printf("agent host before %v %d %d\n", idx, len(con_net_arr), time.Now().UnixMicro())
 
 				d.SetHost(cshost, &agentinfo_arr)
-				//fmt.Printf("agent host after %v %d %d\n", idx, len(net_arr), time.Now().UnixMicro())
+				//fmt.Printf("agent host after %v %d %d\n", idx, len(con_net_arr), time.Now().UnixMicro())
 
 				// TCP 데이터는 1회만 넘기도록 해야 함
 				if idx == 0 && tcpRequestKeys.IsDataMapping(app.HOST_CODE) {
@@ -87,172 +101,151 @@ func main() {
 				}
 			}
 		case csperf := <-ch.ConsumerData.Realtimeperf:
-			current_time.Host = int64(time.Unix(time.Now().Unix(), 0).Unix() / 2)
+			current_time.Perf = int64(time.Unix(time.Now().Unix(), 0).Unix() / 2)
+			ltp_data := data.LastrealtimeperfArray{}
+			perf_data := data.RealtimeperfArray{}
+			cpu_data := data.RealtimecpuArray{}
 
-			if len(perf_arr) > 0 && current_time.Host > previous_time.Host {
-				//fmt.Printf("perf %d\n", len(perf_arr))
+			for idx, d := range db_handler {
+				dbtype := d.GetTabletype("realtimeperf")
+				d.SetPerfArray(&con_perf_arr, dbtype, dbdata[idx].Last, dbdata[idx].Perf, dbdata[idx].Cpu)
+			}
+
+			db_handler[0].SetPerf(csperf, "pg", &ltp_data, &perf_data, &cpu_data)
+			if tcpRequestKeys.IsDataMapping(app.LASTPERF_CODE) {
+				go func() {
+					tcpResponseData <- app.ConvertJson(app.LASTPERF_CODE, ltp_data.GetString())
+				}()
+			}
+			if tcpRequestKeys.IsDataMapping(app.BASIC_CODE) {
+				go func() {
+					tcpResponseData <- app.ConvertJson(app.BASIC_CODE, perf_data.GetString())
+				}()
+			}
+			if tcpRequestKeys.IsDataMapping(app.CPU_CODE) {
+				go func() {
+					tcpResponseData <- app.ConvertJson(app.CPU_CODE, cpu_data.GetString())
+				}()
+			}
+
+			if len(con_perf_arr) > 0 && current_time.Perf > previous_time.Perf {
+				con_perf_arr = app.RemoveDuplicate(con_perf_arr).([]data.AgentRealTimePerf)
+
 				for idx, d := range db_handler {
-					//agentid := d.GetAgentId(csperf.AgentID)
-					perf_arr = app.RemoveDuplicate(perf_arr).([]data.AgentRealTimePerf)
-
 					dbtype := d.GetTabletype("realtimeperf")
 
-					if dbtype == "pg" {
-						lrtp := data.LastrealtimeperfArray{}
-						perf := data.RealtimeperfPgArray{}
-						cpu := data.RealtimecpuPgArray{}
+					fmt.Printf("realtimeperf before %v %d %d\n", idx, len(con_perf_arr), time.Now().UnixMicro())
+					d.InsertTableArray(dbtype, dbdata[idx].Last, dbdata[idx].Perf, dbdata[idx].Cpu)
+					fmt.Printf("realtimeperf after %v %d %d\n", idx, len(con_perf_arr), time.Now().UnixMicro())
 
-						fmt.Printf("realtimeperf set %v %d %d\n", idx, len(perf_arr), time.Now().UnixMicro())
-						d.SetPerfArray(&perf_arr, &lrtp, &perf, &cpu)
-
-						// TCP 데이터는 1회만 넘기도록 해야 함
-						if idx == 0 {
-							if tcpRequestKeys.IsDataMapping(app.LASTPERF_CODE) {
-								tcpResponseData <- app.ConvertJson(app.LASTPERF_CODE, lrtp.GetString())
-							}
-							if tcpRequestKeys.IsDataMapping(app.BASIC_CODE) {
-								tcpResponseData <- app.ConvertJson(app.BASIC_CODE, perf.GetString())
-							}
-							if tcpRequestKeys.IsDataMapping(app.CPU_CODE) {
-								tcpResponseData <- app.ConvertJson(app.CPU_CODE, cpu.GetString())
-							}
-						}
-						fmt.Printf("realtimeperf before %v %d %d\n", idx, len(perf_arr), time.Now().UnixMicro())
-						d.InsertTableArray(dbtype, &lrtp, &perf, &cpu)
-						fmt.Printf("realtimeperf after %v %d %d\n", idx, len(perf_arr), time.Now().UnixMicro())
-					} else {
-						lrtp := data.LastrealtimeperfArray{}
-						perf := data.RealtimeperfTsArray{}
-						cpu := data.RealtimecpuTsArray{}
-
-						fmt.Printf("realtimeperf set %v %d %d\n", idx, len(perf_arr), time.Now().UnixMicro())
-						d.SetPerfArray(&perf_arr, &lrtp, &perf, &cpu)
-						fmt.Printf("realtimeperf before %v %d %d\n", idx, len(perf_arr), time.Now().UnixMicro())
-						d.InsertTableArray(dbtype, &lrtp, &perf, &cpu)
-						fmt.Printf("realtimeperf after %v %d %d\n", idx, len(perf_arr), time.Now().UnixMicro())
-					}
+					// 초기화
+					dbdata[idx].Last = &data.LastrealtimeperfArray{}
+					dbdata[idx].Perf = &data.RealtimeperfArray{}
+					dbdata[idx].Cpu = &data.RealtimecpuArray{}
 				}
 
-				perf_arr = nil
-				previous_time.Host = current_time.Host
-
+				con_perf_arr = nil
+				previous_time.Perf = current_time.Perf
 			} else {
-				perf_arr = append(perf_arr, *csperf)
+				con_perf_arr = append(con_perf_arr, *csperf)
 			}
 		case cspid := <-ch.ConsumerData.Realtimepid:
 			current_time.Pid = int64(time.Unix(time.Now().Unix(), 0).Unix() / 2)
 
-			if len(pid_arr) > 0 && current_time.Pid > previous_time.Pid {
-				//fmt.Printf("pid %d\n", len(pid_arr))
-				pid_arr = app.RemoveDuplicate(pid_arr).([]data.AgentRealTimePID)
+			for idx, d := range db_handler {
+				dbtype := d.GetTabletype("realtimepid")
+				d.SetPidArray(&con_pid_arr, dbtype, dbdata[idx].Pid, dbdata[idx].Proc)
+			}
+
+			if len(con_pid_arr) > 0 && current_time.Pid > previous_time.Pid {
+				con_pid_arr = app.RemoveDuplicate(con_pid_arr).([]data.AgentRealTimePID)
 
 				for idx, d := range db_handler {
-					// Check Agent
 					dbtype := d.GetTabletype("realtimepid")
 
-					if dbtype == "pg" {
-						pid := data.RealtimepidPgArray{}
-						proc := data.RealtimeprocPgArray{}
+					fmt.Printf("realtimepid before %v %d %d\n", idx, len(con_pid_arr), time.Now().UnixMicro())
+					d.InsertTableArray(dbtype, dbdata[idx].Pid, dbdata[idx].Proc)
+					fmt.Printf("realtimepid after %v %d %d\n", idx, len(con_pid_arr), time.Now().UnixMicro())
 
-						fmt.Printf("realtimepid set %v %d %d\n", idx, len(pid_arr), time.Now().UnixMicro())
-						d.SetPidArray(&pid_arr, &pid, &proc)
-						fmt.Printf("realtimepid before %v %d %d\n", idx, len(pid_arr), time.Now().UnixMicro())
-						d.InsertTableArray(dbtype, &pid, &proc)
-						fmt.Printf("realtimepid after %v %d %d\n", idx, len(pid_arr), time.Now().UnixMicro())
-					} else {
-						pid := data.RealtimepidTsArray{}
-						proc := data.RealtimeprocTsArray{}
-
-						fmt.Printf("realtimepid set %v %d %d\n", idx, len(pid_arr), time.Now().UnixMicro())
-						d.SetPidArray(&pid_arr, &pid, &proc)
-						fmt.Printf("realtimepid before %v %d %d\n", idx, len(pid_arr), time.Now().UnixMicro())
-						d.InsertTableArray(dbtype, &pid, &proc)
-						fmt.Printf("realtimepid after %v %d %d\n", idx, len(pid_arr), time.Now().UnixMicro())
-					}
+					// 초기화
+					dbdata[idx].Pid = &data.RealtimepidArray{}
+					dbdata[idx].Proc = &data.RealtimeprocArray{}
 				}
 
-				pid_arr = nil
+				con_pid_arr = nil
 				previous_time.Pid = current_time.Pid
 			} else {
-				pid_arr = append(pid_arr, *cspid)
+				con_pid_arr = append(con_pid_arr, *cspid)
 			}
 		case csdisk := <-ch.ConsumerData.Realtimedisk:
 			current_time.Disk = int64(time.Unix(time.Now().Unix(), 0).Unix() / 2)
+			tcp_data := data.RealtimediskArray{}
 
-			if len(disk_arr) > 0 && current_time.Disk > previous_time.Disk {
-				//fmt.Printf("disk %d\n", len(disk_arr))
-				disk_arr = app.RemoveDuplicate(disk_arr).([]data.AgentRealTimeDisk)
+			for idx, d := range db_handler {
+				dbtype := d.GetTabletype("realtimedisk")
+				d.SetDiskArray(&con_disk_arr, dbtype, dbdata[idx].Disk)
+			}
+
+			if tcpRequestKeys.IsDataMapping(app.DISK_CODE) {
+				go func() {
+					db_handler[0].SetDisk(csdisk, "pg", &tcp_data)
+					tcpResponseData <- app.ConvertJson(app.DISK_CODE, tcp_data.GetString())
+				}()
+			}
+
+			if len(con_disk_arr) > 0 && current_time.Disk > previous_time.Disk {
+				con_disk_arr = app.RemoveDuplicate(con_disk_arr).([]data.AgentRealTimeDisk)
 
 				for idx, d := range db_handler {
 					dbtype := d.GetTabletype("realtimedisk")
 
-					if dbtype == "pg" {
-						disk := data.RealtimediskPgArray{}
+					fmt.Printf("realtimedisk before %v %d %d\n", idx, len(con_disk_arr), time.Now().UnixMicro())
+					d.InsertTableArray(dbtype, dbdata[idx].Disk)
+					fmt.Printf("realtimedisk after %v %d %d\n", idx, len(con_disk_arr), time.Now().UnixMicro())
 
-						fmt.Printf("realtimedisk set %v %d %d\n", idx, len(disk_arr), time.Now().UnixMicro())
-						d.SetDiskArray(&disk_arr, &disk)
-
-						if idx == 0 && tcpRequestKeys.IsDataMapping(app.DISK_CODE) {
-							tcpResponseData <- app.ConvertJson(app.DISK_CODE, disk.GetString())
-						}
-
-						fmt.Printf("realtimedisk before %v %d %d\n", idx, len(disk_arr), time.Now().UnixMicro())
-						d.InsertTableArray(dbtype, &disk)
-						fmt.Printf("realtimedisk after %v %d %d\n", idx, len(disk_arr), time.Now().UnixMicro())
-					} else {
-						disk := data.RealtimediskTsArray{}
-
-						fmt.Printf("realtimedisk set %v %d %d\n", idx, len(disk_arr), time.Now().UnixMicro())
-						d.SetDiskArray(&disk_arr, &disk)
-						fmt.Printf("realtimedisk before %v %d %d\n", idx, len(disk_arr), time.Now().UnixMicro())
-						d.InsertTableArray(dbtype, &disk)
-						fmt.Printf("realtimedisk after %v %d %d\n", idx, len(disk_arr), time.Now().UnixMicro())
-					}
+					// 초기화
+					dbdata[idx].Disk = &data.RealtimediskArray{}
 				}
 
-				disk_arr = nil
+				con_disk_arr = nil
 				previous_time.Disk = current_time.Disk
 			} else {
-				disk_arr = append(disk_arr, *csdisk)
+				con_disk_arr = append(con_disk_arr, *csdisk)
 			}
 		case csnet := <-ch.ConsumerData.Realtimenet:
 			current_time.Net = int64(time.Unix(time.Now().Unix(), 0).Unix() / 2)
+			tcp_data := data.RealtimenetArray{}
 
-			if len(net_arr) > 0 && current_time.Net > previous_time.Pid {
-				//fmt.Printf("net %d\n", len(net_arr))
-				net_arr = app.RemoveDuplicate(net_arr).([]data.AgentRealTimeNet)
+			for idx, d := range db_handler {
+				dbtype := d.GetTabletype("realtimenet")
+				d.SetNetArray(&con_net_arr, dbtype, dbdata[idx].Net)
+			}
+
+			if tcpRequestKeys.IsDataMapping(app.NET_CODE) {
+				go func() {
+					db_handler[0].SetNet(csnet, "pg", &tcp_data)
+					tcpResponseData <- app.ConvertJson(app.NET_CODE, tcp_data.GetString())
+				}()
+			}
+
+			if len(con_net_arr) > 0 && current_time.Net > previous_time.Net {
+				con_net_arr = app.RemoveDuplicate(con_net_arr).([]data.AgentRealTimeNet)
 
 				for idx, d := range db_handler {
 					dbtype := d.GetTabletype("realtimenet")
 
-					if dbtype == "pg" {
-						net := data.RealtimenetPgArray{}
+					fmt.Printf("realtimenet before %v %d %d\n", idx, len(con_net_arr), time.Now().UnixMicro())
+					d.InsertTableArray(dbtype, dbdata[idx].Net)
+					fmt.Printf("realtimenet after %v %d %d\n", idx, len(con_net_arr), time.Now().UnixMicro())
 
-						fmt.Printf("realtimenet set %v %d %d\n", idx, len(net_arr), time.Now().UnixMicro())
-						d.SetNetArray(&net_arr, &net)
-
-						if idx == 0 && tcpRequestKeys.IsDataMapping(app.NET_CODE) {
-							tcpResponseData <- app.ConvertJson(app.NET_CODE, net.GetString())
-						}
-
-						fmt.Printf("realtimenet before %v %d %d\n", idx, len(net_arr), time.Now().UnixMicro())
-						d.InsertTableArray(dbtype, &net)
-						fmt.Printf("realtimenet after %v %d %d\n", idx, len(net_arr), time.Now().UnixMicro())
-					} else {
-						net := data.RealtimenetTsArray{}
-
-						fmt.Printf("realtimenet set %v %d %d\n", idx, len(net_arr), time.Now().UnixMicro())
-						d.SetNetArray(&net_arr, &net)
-						fmt.Printf("realtimenet before %v %d %d\n", idx, len(net_arr), time.Now().UnixMicro())
-						d.InsertTableArray(dbtype, &net)
-						fmt.Printf("realtimenet after %v %d %d\n", idx, len(net_arr), time.Now().UnixMicro())
-					}
+					// 초기화
+					dbdata[idx].Net = &data.RealtimenetArray{}
 				}
 
-				net_arr = nil
+				con_net_arr = nil
 				previous_time.Net = current_time.Net
 			} else {
-				net_arr = append(net_arr, *csnet)
+				con_net_arr = append(con_net_arr, *csnet)
 			}
 		case req_keys := <-tcpRequestChan:
 			//fmt.Printf("main %v\n", req_keys)

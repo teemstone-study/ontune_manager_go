@@ -10,7 +10,7 @@ import (
 )
 
 type TableGet interface {
-	GetInsertStmt(tablename string, timetype string) string
+	GetInsertStmt(tablename string, dbtype string) string
 	GetArgs() []interface{}
 	GetArrString() []string
 	GetString() string

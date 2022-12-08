@@ -21,13 +21,23 @@ type ConsumerStruct struct {
 	Realtimenet  chan *data.AgentRealTimeNet
 }
 
+type DBDataStruct struct {
+	Last *data.LastrealtimeperfArray
+	Perf *data.RealtimeperfArray
+	Cpu  *data.RealtimecpuArray
+	Pid  *data.RealtimepidArray
+	Proc *data.RealtimeprocArray
+	Disk *data.RealtimediskArray
+	Net  *data.RealtimenetArray
+}
+
 type RealData struct {
 	Code uint32 `json:"code"`
 	Data string `json:"data"`
 }
 
 type ConsumerTime struct {
-	Host int64
+	Perf int64
 	Pid  int64
 	Disk int64
 	Net  int64
