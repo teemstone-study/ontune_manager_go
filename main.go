@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	DEBUG_FLAG = false
+	DEBUG_FLAG = true
 )
 
 func main() {

@@ -169,7 +169,7 @@ func (d *DBHandler) DemoHostSetting(arr *data.AgentinfoArr) {
 func (d *DBHandler) DemoHostStateChange(agent_str string) {
 	tx := d.db.MustBegin()
 	timestamp := time.Now().Unix()
-	fmt.Printf("%v demohoststate", d.name)
+
 	// connected=0인 agent를 1로 초기화
 	tx.MustExec(data.DemoUpdateAgentinfoReset, timestamp)
 	tx.MustExec(fmt.Sprintf(data.DemoUpdateAgentinfoState, 0, timestamp, agent_str, 1, timestamp))
@@ -178,9 +178,8 @@ func (d *DBHandler) DemoHostStateChange(agent_str string) {
 
 func (d *DBHandler) DemoBptUpdate(arr *data.LastrealtimeperfArr) {
 	tx := d.db.MustBegin()
-	fmt.Printf("%v demobptupdate", d.name)
-	tx.MustExec(data.DeleteLastrealtimeperfAll, d.demo.HostCount)
 
+	tx.MustExec(data.DeleteLastrealtimeperfAll, d.demo.HostCount)
 	tx.MustExec(data.InsertLastrealtimeperf, arr.GetArgs()...)
 	tx.Commit()
 }
@@ -246,7 +245,6 @@ func (d *DBHandler) SetHost(cshost *data.AgentHostAgentInfo, agentinfo_arr *data
 	MemoriSize -> Memorysize
 	SwapMemory -> Swapsize
 	----------------------------*/
-	fmt.Printf("%v sethost", d.name)
 
 	if _, ok := d.hosts[cshost.AgentID]; ok {
 		// Already Exists
@@ -369,7 +367,6 @@ func (d *DBHandler) GetAgentId(agentname string) int {
 }
 
 func (d *DBHandler) SetPerfArray(arr *[]data.AgentRealTimePerf, dbtype string, tables ...data.TableSetArray) {
-	fmt.Printf("%v setperf", d.name)
 	for _, t := range tables {
 		for _, a := range *arr {
 			// switch t.(type) {
@@ -389,7 +386,6 @@ func (d *DBHandler) SetPerf(agent *data.AgentRealTimePerf, dbtype string, tables
 }
 
 func (d *DBHandler) SetPidArray(arr *[]data.AgentRealTimePID, dbtype string, tables ...data.TableSetArrayInner) {
-	fmt.Printf("%v setpid", d.name)
 	for _, t := range tables {
 		for _, a := range *arr {
 			agentid := d.GetAgentId(a.AgentID)
@@ -412,7 +408,6 @@ func (d *DBHandler) SetPid(agent *data.AgentRealTimePID, dbtype string, tables .
 }
 
 func (d *DBHandler) SetDiskArray(arr *[]data.AgentRealTimeDisk, dbtype string, tables ...data.TableSetArrayInner) {
-	fmt.Printf("%v setdisk", d.name)
 	for _, t := range tables {
 		for _, a := range *arr {
 			agentid := d.GetAgentId(a.AgentID)
@@ -435,7 +430,6 @@ func (d *DBHandler) SetDisk(agent *data.AgentRealTimeDisk, dbtype string, tables
 }
 
 func (d *DBHandler) SetNetArray(arr *[]data.AgentRealTimeNet, dbtype string, tables ...data.TableSetArrayInner) {
-	fmt.Printf("%v setnet", d.name)
 	for _, t := range tables {
 		for _, a := range *arr {
 			agentid := d.GetAgentId(a.AgentID)
@@ -459,7 +453,6 @@ func (d *DBHandler) SetNet(agent *data.AgentRealTimeNet, dbtype string, tables .
 
 func (d *DBHandler) InsertTableArray(dbtype string, tables ...data.TableGet) {
 	var err error
-	fmt.Printf("%v insert", d.name)
 
 	for _, t := range tables {
 		tx := d.db.MustBegin()
@@ -481,6 +474,7 @@ func (d *DBHandler) InsertTableArray(dbtype string, tables ...data.TableGet) {
 		case *data.RealtimenetArray:
 			tablename = d.GetTablename("realtimenet")
 		}
+		fmt.Printf("%s %sinsert\n", d.name, tablename)
 
 		_, err = tx.Exec(t.GetInsertStmt(tablename, dbtype), t.GetArgs()...)
 		ErrorTx(err, tx)
@@ -651,7 +645,7 @@ func DBInit(dbinfo DbInfo, demoinfo DemoInfo, info *data.AgentinfoArr) *DBHandle
 	d.ids["descid"] = d.GetNames("descid")
 
 	go d.CheckTableInterval()
-	fmt.Printf("%v init", d.name)
+	fmt.Printf("%v init\n", d.name)
 
 	return d
 }
