@@ -454,9 +454,10 @@ func (d *DBHandler) SetNet(agent *data.AgentRealTimeNet, dbtype string, tables .
 
 func (d *DBHandler) InsertTableArray(dbtype string, tables ...data.TableGet) {
 	var err error
-	tx := d.db.MustBegin()
 
 	for _, t := range tables {
+		tx := d.db.MustBegin()
+
 		var tablename string
 		switch t.(type) {
 		case *data.LastrealtimeperfArray:
@@ -477,8 +478,9 @@ func (d *DBHandler) InsertTableArray(dbtype string, tables ...data.TableGet) {
 
 		_, err = tx.Exec(t.GetInsertStmt(tablename, dbtype), t.GetArgs()...)
 		ErrorTx(err, tx)
+
+		tx.Commit()
 	}
-	tx.Commit()
 }
 
 func (d *DBHandler) GetProcId(cspidinner *data.AgentRealTimePIDInner) (int, int, int) {

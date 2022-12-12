@@ -123,12 +123,19 @@ func RemoveDuplicate(arr interface{}) interface{} {
 	case []data.AgentRealTimePID:
 		result_arr := make([]data.AgentRealTimePID, 0)
 		for _, a := range arr.([]data.AgentRealTimePID) {
-			flag := a.AgentID + "_" + a.Agenttime.Format("060102030405")
-			if _, ok := arr_map[flag]; ok {
-				continue
-			} else {
-				arr_map[flag] = struct{}{}
-				result_arr = append(result_arr, a)
+			for _, i := range a.PerfList {
+				flag := a.AgentID + "_" + i.Cmdname + "_" + i.Username + "_" + i.Argname + "_" + a.Agenttime.Format("060102030405")
+				if _, ok := arr_map[flag]; ok {
+					continue
+				} else {
+					arr_map[flag] = struct{}{}
+					single_data := data.AgentRealTimePID{}
+					single_data.PerfList = make([]data.AgentRealTimePIDInner, 0)
+					single_data.AgentID = a.AgentID
+					single_data.Agenttime = a.Agenttime
+					single_data.PerfList = append(single_data.PerfList, i)
+					result_arr = append(result_arr, single_data)
+				}
 			}
 		}
 
@@ -137,12 +144,19 @@ func RemoveDuplicate(arr interface{}) interface{} {
 	case []data.AgentRealTimeDisk:
 		result_arr := make([]data.AgentRealTimeDisk, 0)
 		for _, a := range arr.([]data.AgentRealTimeDisk) {
-			flag := a.AgentID + "_" + a.Agenttime.Format("060102030405")
-			if _, ok := arr_map[flag]; ok {
-				continue
-			} else {
-				arr_map[flag] = struct{}{}
-				result_arr = append(result_arr, a)
+			for _, i := range a.PerfList {
+				flag := a.AgentID + "_" + i.Ioname + "_" + i.Descname + "_" + a.Agenttime.Format("060102030405")
+				if _, ok := arr_map[flag]; ok {
+					continue
+				} else {
+					arr_map[flag] = struct{}{}
+					single_data := data.AgentRealTimeDisk{}
+					single_data.PerfList = make([]data.AgentRealTimeDiskInner, 0)
+					single_data.AgentID = a.AgentID
+					single_data.Agenttime = a.Agenttime
+					single_data.PerfList = append(single_data.PerfList, i)
+					result_arr = append(result_arr, single_data)
+				}
 			}
 		}
 
@@ -151,12 +165,19 @@ func RemoveDuplicate(arr interface{}) interface{} {
 	case []data.AgentRealTimeNet:
 		result_arr := make([]data.AgentRealTimeNet, 0)
 		for _, a := range arr.([]data.AgentRealTimeNet) {
-			flag := a.AgentID + "_" + a.Agenttime.Format("060102030405")
-			if _, ok := arr_map[flag]; ok {
-				continue
-			} else {
-				arr_map[flag] = struct{}{}
-				result_arr = append(result_arr, a)
+			for _, i := range a.PerfList {
+				flag := a.AgentID + "_" + i.Ioname + "_" + a.Agenttime.Format("060102030405")
+				if _, ok := arr_map[flag]; ok {
+					continue
+				} else {
+					arr_map[flag] = struct{}{}
+					single_data := data.AgentRealTimeNet{}
+					single_data.PerfList = make([]data.AgentRealTimeNetInner, 0)
+					single_data.AgentID = a.AgentID
+					single_data.Agenttime = a.Agenttime
+					single_data.PerfList = append(single_data.PerfList, i)
+					result_arr = append(result_arr, single_data)
+				}
 			}
 		}
 

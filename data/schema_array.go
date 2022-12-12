@@ -951,7 +951,7 @@ func (r *RealtimenetArray) SetData(data interface{}, dbtype string, agentid int,
 	case "ts":
 		r.Ontunetime = append(r.Ontunetime, agenttime)
 	}
-	r.Ontunetime = append(r.Ontunetime, agenttime.Unix())
+
 	r.Agenttime = append(r.Agenttime, int(agenttime.Unix()))
 	r.Agentid = append(r.Agentid, agentid)
 	r.Ionameid = append(r.Ionameid, ids[0])

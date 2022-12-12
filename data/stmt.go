@@ -272,7 +272,7 @@ _busy int4 NULL,
 _descid int4 NULL,
 _readsvctime int4 NULL,
 _writesvctime int4 NULL,
-PRIMARY KEY(_agentid, _ontunetime)
+PRIMARY KEY(_agentid, _ontunetime, _ionameid, _descid)
 )	
 WITH (	
 autovacuum_enabled=false
@@ -298,7 +298,7 @@ _readiops int4 NULL,
 _writeiops int4 NULL,
 _errorps int4 NULL,
 _collision int4 NULL,
-PRIMARY KEY(_agentid, _ontunetime)
+PRIMARY KEY(_agentid, _ontunetime, _ionameid)
 )	
 WITH (	
 autovacuum_enabled=false

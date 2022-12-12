@@ -134,6 +134,12 @@ func main() {
 				for idx, d := range db_handler {
 					dbtype := d.GetTabletype("realtimeperf")
 
+					// 초기화
+					dbdata[idx].Last = &data.LastrealtimeperfArray{}
+					dbdata[idx].Perf = &data.RealtimeperfArray{}
+					dbdata[idx].Cpu = &data.RealtimecpuArray{}
+					d.SetPerfArray(&con_perf_arr, dbtype, dbdata[idx].Last, dbdata[idx].Perf, dbdata[idx].Cpu)
+
 					fmt.Printf("realtimeperf before %v %d %d\n", idx, len(con_perf_arr), time.Now().UnixMicro())
 					d.InsertTableArray(dbtype, dbdata[idx].Last, dbdata[idx].Perf, dbdata[idx].Cpu)
 					fmt.Printf("realtimeperf after %v %d %d\n", idx, len(con_perf_arr), time.Now().UnixMicro())
@@ -162,6 +168,11 @@ func main() {
 
 				for idx, d := range db_handler {
 					dbtype := d.GetTabletype("realtimepid")
+
+					// 초기화
+					dbdata[idx].Pid = &data.RealtimepidArray{}
+					dbdata[idx].Proc = &data.RealtimeprocArray{}
+					d.SetPidArray(&con_pid_arr, dbtype, dbdata[idx].Pid, dbdata[idx].Proc)
 
 					fmt.Printf("realtimepid before %v %d %d\n", idx, len(con_pid_arr), time.Now().UnixMicro())
 					d.InsertTableArray(dbtype, dbdata[idx].Pid, dbdata[idx].Proc)
@@ -199,6 +210,10 @@ func main() {
 				for idx, d := range db_handler {
 					dbtype := d.GetTabletype("realtimedisk")
 
+					// 초기화
+					dbdata[idx].Disk = &data.RealtimediskArray{}
+					d.SetDiskArray(&con_disk_arr, dbtype, dbdata[idx].Disk)
+
 					fmt.Printf("realtimedisk before %v %d %d\n", idx, len(con_disk_arr), time.Now().UnixMicro())
 					d.InsertTableArray(dbtype, dbdata[idx].Disk)
 					fmt.Printf("realtimedisk after %v %d %d\n", idx, len(con_disk_arr), time.Now().UnixMicro())
@@ -233,6 +248,9 @@ func main() {
 
 				for idx, d := range db_handler {
 					dbtype := d.GetTabletype("realtimenet")
+					// 초기화
+					dbdata[idx].Net = &data.RealtimenetArray{}
+					d.SetNetArray(&con_net_arr, dbtype, dbdata[idx].Net)
 
 					fmt.Printf("realtimenet before %v %d %d\n", idx, len(con_net_arr), time.Now().UnixMicro())
 					d.InsertTableArray(dbtype, dbdata[idx].Net)
