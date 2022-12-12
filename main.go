@@ -7,6 +7,10 @@ import (
 	"time"
 )
 
+const (
+	DEBUG_FLAG = false
+)
+
 func main() {
 	config := app.GetConfig("config.yml")
 	kafkaconfig := app.SettingKafka{
@@ -66,13 +70,11 @@ func main() {
 			// 이 부분 TCP 데이터는 일단 넘기도록 하나, 아래의 Host 정보와 넘기는 형식은 다름
 			// 여기에서는 변경될 Agent ID만 넘기는 형태가 됨
 			for _, d := range db_handler {
-				//fmt.Printf("change state before %d %d %d\n", idx, len(con_net_arr), time.Now().UnixMicro())
 				if tcpRequestKeys.IsDataMapping(app.HOST_CODE) {
 					tcpResponseData <- app.ConvertJson(app.HOST_CODE, state_agent_str)
 				}
 
 				d.DemoHostStateChange(state_agent_str)
-				//fmt.Printf("change state after %d %d %d\n", idx, len(con_net_arr), time.Now().UnixMicro())
 			}
 		case lrtp := <-ch.Lastrealtimeperf:
 			if tcpRequestKeys.IsDataMapping(app.LASTPERF_CODE) {
@@ -81,9 +83,7 @@ func main() {
 				}
 			}
 			for _, d := range db_handler {
-				//fmt.Printf("lastrealtimeperf before %v %d %d\n", idx, len(con_net_arr), time.Now().UnixMicro())
 				d.DemoBptUpdate(lrtp)
-				//fmt.Printf("lastrealtimeperf after %v %d %d\n", idx, len(con_net_arr), time.Now().UnixMicro())
 			}
 		case cshost := <-ch.ConsumerData.Host:
 			for idx, d := range db_handler {
@@ -140,9 +140,13 @@ func main() {
 					dbdata[idx].Cpu = &data.RealtimecpuArray{}
 					d.SetPerfArray(&con_perf_arr, dbtype, dbdata[idx].Last, dbdata[idx].Perf, dbdata[idx].Cpu)
 
-					fmt.Printf("realtimeperf before %v %d %d\n", idx, len(con_perf_arr), time.Now().UnixMicro())
+					if DEBUG_FLAG {
+						fmt.Printf("realtimeperf before %v %d %d\n", idx, len(con_perf_arr), time.Now().UnixMicro())
+					}
 					d.InsertTableArray(dbtype, dbdata[idx].Last, dbdata[idx].Perf, dbdata[idx].Cpu)
-					fmt.Printf("realtimeperf after %v %d %d\n", idx, len(con_perf_arr), time.Now().UnixMicro())
+					if DEBUG_FLAG {
+						fmt.Printf("realtimeperf after %v %d %d\n", idx, len(con_perf_arr), time.Now().UnixMicro())
+					}
 
 					// 초기화
 					dbdata[idx].Last = &data.LastrealtimeperfArray{}
@@ -174,9 +178,13 @@ func main() {
 					dbdata[idx].Proc = &data.RealtimeprocArray{}
 					d.SetPidArray(&con_pid_arr, dbtype, dbdata[idx].Pid, dbdata[idx].Proc)
 
-					fmt.Printf("realtimepid before %v %d %d\n", idx, len(con_pid_arr), time.Now().UnixMicro())
+					if DEBUG_FLAG {
+						fmt.Printf("realtimepid before %v %d %d\n", idx, len(con_pid_arr), time.Now().UnixMicro())
+					}
 					d.InsertTableArray(dbtype, dbdata[idx].Pid, dbdata[idx].Proc)
-					fmt.Printf("realtimepid after %v %d %d\n", idx, len(con_pid_arr), time.Now().UnixMicro())
+					if DEBUG_FLAG {
+						fmt.Printf("realtimepid after %v %d %d\n", idx, len(con_pid_arr), time.Now().UnixMicro())
+					}
 
 					// 초기화
 					dbdata[idx].Pid = &data.RealtimepidArray{}
@@ -214,9 +222,13 @@ func main() {
 					dbdata[idx].Disk = &data.RealtimediskArray{}
 					d.SetDiskArray(&con_disk_arr, dbtype, dbdata[idx].Disk)
 
-					fmt.Printf("realtimedisk before %v %d %d\n", idx, len(con_disk_arr), time.Now().UnixMicro())
+					if DEBUG_FLAG {
+						fmt.Printf("realtimedisk before %v %d %d\n", idx, len(con_disk_arr), time.Now().UnixMicro())
+					}
 					d.InsertTableArray(dbtype, dbdata[idx].Disk)
-					fmt.Printf("realtimedisk after %v %d %d\n", idx, len(con_disk_arr), time.Now().UnixMicro())
+					if DEBUG_FLAG {
+						fmt.Printf("realtimedisk after %v %d %d\n", idx, len(con_disk_arr), time.Now().UnixMicro())
+					}
 
 					// 초기화
 					dbdata[idx].Disk = &data.RealtimediskArray{}
@@ -252,9 +264,13 @@ func main() {
 					dbdata[idx].Net = &data.RealtimenetArray{}
 					d.SetNetArray(&con_net_arr, dbtype, dbdata[idx].Net)
 
-					fmt.Printf("realtimenet before %v %d %d\n", idx, len(con_net_arr), time.Now().UnixMicro())
+					if DEBUG_FLAG {
+						fmt.Printf("realtimenet before %v %d %d\n", idx, len(con_net_arr), time.Now().UnixMicro())
+					}
 					d.InsertTableArray(dbtype, dbdata[idx].Net)
-					fmt.Printf("realtimenet after %v %d %d\n", idx, len(con_net_arr), time.Now().UnixMicro())
+					if DEBUG_FLAG {
+						fmt.Printf("realtimenet after %v %d %d\n", idx, len(con_net_arr), time.Now().UnixMicro())
+					}
 
 					// 초기화
 					dbdata[idx].Net = &data.RealtimenetArray{}
