@@ -108,7 +108,7 @@ func main() {
 
 			for idx, d := range db_handler {
 				dbtype := d.GetTabletype("realtimeperf")
-				d.SetPerfArray(&con_perf_arr, dbtype, dbdata[idx].Last, dbdata[idx].Perf, dbdata[idx].Cpu)
+				d.SetPerfArray(&con_perf_arr, dbtype, false, dbdata[idx].Last, dbdata[idx].Perf, dbdata[idx].Cpu)
 			}
 
 			db_handler[0].SetPerf(csperf, "pg", &ltp_data, &perf_data, &cpu_data)
@@ -138,7 +138,7 @@ func main() {
 					dbdata[idx].Last = &data.LastrealtimeperfArray{}
 					dbdata[idx].Perf = &data.RealtimeperfArray{}
 					dbdata[idx].Cpu = &data.RealtimecpuArray{}
-					d.SetPerfArray(&con_perf_arr, dbtype, dbdata[idx].Last, dbdata[idx].Perf, dbdata[idx].Cpu)
+					d.SetPerfArray(&con_perf_arr, dbtype, true, dbdata[idx].Last, dbdata[idx].Perf, dbdata[idx].Cpu)
 
 					if DEBUG_FLAG {
 						fmt.Printf("realtimeperf before %v %d %d\n", idx, len(con_perf_arr), time.Now().UnixMicro())

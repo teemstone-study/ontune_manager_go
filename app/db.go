@@ -366,7 +366,10 @@ func (d *DBHandler) GetAgentId(agentname string) int {
 	return agentid
 }
 
-func (d *DBHandler) SetPerfArray(arr *[]data.AgentRealTimePerf, dbtype string, tables ...data.TableSetArray) {
+func (d *DBHandler) SetPerfArray(arr *[]data.AgentRealTimePerf, dbtype string, flag bool, tables ...data.TableSetArray) {
+	if flag {
+		fmt.Printf("%v %d perfarr\n", d.name, len(*arr))
+	}
 	for _, t := range tables {
 		for _, a := range *arr {
 			// switch t.(type) {
@@ -474,7 +477,7 @@ func (d *DBHandler) InsertTableArray(dbtype string, tables ...data.TableGet) {
 		case *data.RealtimenetArray:
 			tablename = d.GetTablename("realtimenet")
 		}
-		fmt.Printf("%s %sinsert\n", d.name, tablename)
+		//fmt.Printf("%s %sinsert\n", d.name, tablename)
 
 		_, err = tx.Exec(t.GetInsertStmt(tablename, dbtype), t.GetArgs()...)
 		ErrorTx(err, tx)
