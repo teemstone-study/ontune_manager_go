@@ -78,6 +78,43 @@ func (d *DBHandler) CheckTableMetricref() {
 	}
 }
 
+func (d *DBHandler) CreateTableMetric(tb string, tablename string) {
+	tx := d.db.MustBegin()
+	if d.name[:2] == "pg" {
+		switch tb {
+		case "realtimeperf":
+			tx.MustExec(fmt.Sprintf(data.RealtimeperfPgStmt, tablename))
+		case "realtimecpu":
+			tx.MustExec(fmt.Sprintf(data.RealtimecpuPgStmt, tablename))
+		case "realtimedisk":
+			tx.MustExec(fmt.Sprintf(data.RealtimediskPgStmt, tablename))
+		case "realtimenet":
+			tx.MustExec(fmt.Sprintf(data.RealtimenetPgStmt, tablename))
+		case "realtimepid":
+			tx.MustExec(fmt.Sprintf(data.RealtimepidPgStmt, tablename))
+		case "realtimeproc":
+			tx.MustExec(fmt.Sprintf(data.RealtimeprocPgStmt, tablename))
+		}
+	} else {
+		switch tb {
+		case "realtimeperf":
+			tx.MustExec(data.RealtimeperfTsStmt)
+		case "realtimecpu":
+			tx.MustExec(data.RealtimecpuTsStmt)
+		case "realtimedisk":
+			tx.MustExec(data.RealtimediskTsStmt)
+		case "realtimenet":
+			tx.MustExec(data.RealtimenetTsStmt)
+		case "realtimepid":
+			tx.MustExec(data.RealtimepidTsStmt)
+		case "realtimeproc":
+			tx.MustExec(data.RealtimeprocTsStmt)
+		}
+	}
+	tx.MustExec(data.InsertTableinfo, tablename, time.Now().Unix())
+	tx.Commit()
+}
+
 func (d *DBHandler) CheckTableMetric() {
 	// Metric Table Check
 	for _, tb := range metric_tables {
@@ -88,40 +125,7 @@ func (d *DBHandler) CheckTableMetric() {
 		ErrorFatal(err)
 
 		if exist_count == 0 {
-			tx := d.db.MustBegin()
-			if d.name[:2] == "pg" {
-				switch tb {
-				case "realtimeperf":
-					tx.MustExec(fmt.Sprintf(data.RealtimeperfPgStmt, tablename))
-				case "realtimecpu":
-					tx.MustExec(fmt.Sprintf(data.RealtimecpuPgStmt, tablename))
-				case "realtimedisk":
-					tx.MustExec(fmt.Sprintf(data.RealtimediskPgStmt, tablename))
-				case "realtimenet":
-					tx.MustExec(fmt.Sprintf(data.RealtimenetPgStmt, tablename))
-				case "realtimepid":
-					tx.MustExec(fmt.Sprintf(data.RealtimepidPgStmt, tablename))
-				case "realtimeproc":
-					tx.MustExec(fmt.Sprintf(data.RealtimeprocPgStmt, tablename))
-				}
-			} else {
-				switch tb {
-				case "realtimeperf":
-					tx.MustExec(data.RealtimeperfTsStmt)
-				case "realtimecpu":
-					tx.MustExec(data.RealtimecpuTsStmt)
-				case "realtimedisk":
-					tx.MustExec(data.RealtimediskTsStmt)
-				case "realtimenet":
-					tx.MustExec(data.RealtimenetTsStmt)
-				case "realtimepid":
-					tx.MustExec(data.RealtimepidTsStmt)
-				case "realtimeproc":
-					tx.MustExec(data.RealtimeprocTsStmt)
-				}
-			}
-			tx.MustExec(data.InsertTableinfo, tablename, time.Now().Unix())
-			tx.Commit()
+			d.CreateTableMetric(tb, tablename)
 		}
 	}
 }
@@ -132,23 +136,28 @@ func (d *DBHandler) CheckTableInterval() {
 		aftertime := time.Now().Add(1 * time.Second)
 		metric_ref := d.GetTableFlag(aftertime, "metric_ref", metric_ref_tables[0])
 		if metric_ref != d.metric_ref_flag {
-			d.CheckTableMetricref()
+			tx := d.db.MustBegin()
 
 			// 현재 테이블의 값을 이후 테이블로 복사
-			tx := d.db.MustBegin()
 			for _, s := range metric_ref_tables {
-				_, err := tx.Exec(fmt.Sprintf(data.InsertPrevData, d.GetCustomTablename(aftertime, s), d.GetTablename(s)))
-				if err != nil {
-					d.CheckTableMetricref()
-					tx.MustExec(fmt.Sprintf(data.InsertPrevData, d.GetCustomTablename(aftertime, s), d.GetTablename(s)))
-				}
+				customtablename := d.GetCustomTablename(aftertime, s)
+				tx.MustExec(fmt.Sprintf(data.ProcStmt, customtablename))
+				tx.MustExec(data.InsertTableinfo, customtablename, time.Now().Unix())
+
+				_, err := tx.Exec(fmt.Sprintf(data.InsertPrevData, customtablename, d.GetTablename(s)))
+				ErrorFatal(err)
 			}
 			tx.Commit()
+			d.metric_ref_flag = d.GetTableFlag(aftertime, "metric_ref", metric_ref_tables[0])
 		}
 
 		metric := d.GetTableFlag(time.Now().Add(1*time.Second), "metric", metric_tables[0])
 		if metric != d.metric_flag {
-			d.CheckTableMetric()
+			for _, tb := range metric_tables {
+				customtablename := d.GetCustomTablename(aftertime, tb)
+				d.CreateTableMetric(tb, customtablename)
+			}
+			d.metric_flag = d.GetTableFlag(aftertime, "metric", metric_tables[0])
 		}
 	}
 }
