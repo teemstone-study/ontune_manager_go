@@ -55,6 +55,7 @@ func (d *DBHandler) CheckTableInfo() {
 				tx.MustExec(data.DescidStmt)
 			}
 			tx.MustExec(data.InsertTableinfo, tb, time.Now().Unix())
+			fmt.Printf("%s %s table creation is completed\n", d.name, tb)
 			tx.Commit()
 		}
 	}
@@ -73,6 +74,7 @@ func (d *DBHandler) CheckTableMetricref() {
 			tx := d.db.MustBegin()
 			tx.MustExec(fmt.Sprintf(data.ProcStmt, tablename))
 			tx.MustExec(data.InsertTableinfo, tablename, time.Now().Unix())
+			fmt.Printf("%s %s table creation is completed\n", d.name, tablename)
 			tx.Commit()
 		}
 	}
@@ -112,6 +114,7 @@ func (d *DBHandler) CreateTableMetric(tb string, tablename string) {
 		}
 	}
 	tx.MustExec(data.InsertTableinfo, tablename, time.Now().Unix())
+	fmt.Printf("%s %s table creation is completed\n", d.name, tablename)
 	tx.Commit()
 }
 
@@ -143,6 +146,7 @@ func (d *DBHandler) CheckTableInterval() {
 				customtablename := d.GetCustomTablename(aftertime, s)
 				tx.MustExec(fmt.Sprintf(data.ProcStmt, customtablename))
 				tx.MustExec(data.InsertTableinfo, customtablename, time.Now().Unix())
+				fmt.Printf("%s %s table creation is completed\n", d.name, customtablename)
 
 				_, err := tx.Exec(fmt.Sprintf(data.InsertPrevData, customtablename, d.GetTablename(s)))
 				ErrorFatal(err)
@@ -151,7 +155,7 @@ func (d *DBHandler) CheckTableInterval() {
 			d.metric_ref_flag = d.GetTableFlag(aftertime, "metric_ref", metric_ref_tables[0])
 		}
 
-		metric := d.GetTableFlag(time.Now().Add(1*time.Second), "metric", metric_tables[0])
+		metric := d.GetTableFlag(aftertime, "metric", metric_tables[0])
 		if metric != d.metric_flag {
 			for _, tb := range metric_tables {
 				customtablename := d.GetCustomTablename(aftertime, tb)
