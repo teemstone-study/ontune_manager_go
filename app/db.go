@@ -113,8 +113,12 @@ func (d *DBHandler) CreateTableMetric(tb string, tablename string) {
 			tx.MustExec(data.RealtimeprocTsStmt)
 		}
 	}
-	tx.MustExec(data.InsertTableinfo, tablename, time.Now().Unix())
-	fmt.Printf("%s %s table creation is completed\n", d.name, tablename)
+	_, err := tx.Exec(data.InsertTableinfo, tablename, time.Now().Unix())
+	if err != nil {
+		fmt.Printf("%s is already created.\n", tablename)
+	} else {
+		fmt.Printf("%s %s table creation is completed\n", d.name, tablename)
+	}
 	tx.Commit()
 }
 
