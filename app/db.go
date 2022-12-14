@@ -147,7 +147,7 @@ func (d *DBHandler) CheckTableInterval() {
 
 			// 현재 테이블의 값을 이후 테이블로 복사
 			for _, s := range metric_ref_tables {
-				customtablename := d.GetCustomTablename(aftertime, s)
+				customtablename := d.GetCustomTablename(aftertime, "metric_ref", s)
 				tx.MustExec(fmt.Sprintf(data.ProcStmt, customtablename))
 				tx.MustExec(data.InsertTableinfo, customtablename, time.Now().Unix())
 				fmt.Printf("%s %s table creation is completed\n", d.name, customtablename)
@@ -162,7 +162,7 @@ func (d *DBHandler) CheckTableInterval() {
 		metric := d.GetTableFlag(aftertime, "metric", metric_tables[0])
 		if metric != d.metric_flag {
 			for _, tb := range metric_tables {
-				customtablename := d.GetCustomTablename(aftertime, tb)
+				customtablename := d.GetCustomTablename(aftertime, "metric", tb)
 				d.CreateTableMetric(tb, customtablename)
 			}
 			d.metric_flag = d.GetTableFlag(aftertime, "metric", metric_tables[0])
@@ -580,8 +580,8 @@ func (d *DBHandler) GetTablename(tablename string) string {
 	return ""
 }
 
-func (d *DBHandler) GetCustomTablename(timevalue time.Time, tb string) string {
-	flag := d.GetTableFlag(timevalue, "metric_ref", tb)
+func (d *DBHandler) GetCustomTablename(timevalue time.Time, tableinfo string, tb string) string {
+	flag := d.GetTableFlag(timevalue, tableinfo, tb)
 
 	if flag == "" {
 		return tb
