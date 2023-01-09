@@ -1,49 +1,13 @@
 database:
-  - name: pg-hour
-    host: 192.168.0.140
+  - name: pg
+    host: 192.168.0.187
     port: 15432
-    dbname: ontune
-    username: ontune
-    password: ontune
-  - name: pg-day
-    host: 192.168.0.140
-    port: 15434
-    dbname: ontune
-    username: ontune
-    password: ontune
-  - name: pg-week
-    host: 192.168.0.140
-    port: 15435
-    dbname: ontune
-    username: ontune
-    password: ontune
-  - name: pg-month
-    host: 192.168.0.140
-    port: 15436
-    dbname: ontune
-    username: ontune
-    password: ontune
-  - name: pg-all
-    host: 192.168.0.140
-    port: 15437
-    dbname: ontune
-    username: ontune
-    password: ontune
-  - name: tsdb-hypertable
-    host: 192.168.0.140
-    port: 15433
-    dbname: ontune
-    username: ontune
-    password: ontune
-  - name: tsdb-pgtable
-    host: 192.168.0.140
-    port: 15443
     dbname: ontune
     username: ontune
     password: ontune
 
 kafka:
-  host: 192.168.0.140
+  host: 192.168.0.187
   port: 9093
 
 apiserver:

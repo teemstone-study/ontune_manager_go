@@ -383,15 +383,9 @@ func (d *DBHandler) GetAgentId(agentname string) int {
 	return agentid
 }
 
-func (d *DBHandler) SetPerfArray(arr *[]data.AgentRealTimePerf, dbtype string, flag bool, tables ...data.TableSetArray) {
-	if flag {
-		fmt.Printf("%v %d perfarr\n", d.name, len(*arr))
-	}
+func (d *DBHandler) SetPerfArray(arr *[]data.AgentRealTimePerf, dbtype string, tables ...data.TableSetArray) {
 	for _, t := range tables {
 		for _, a := range *arr {
-			// switch t.(type) {
-			// case *data.LastrealtimeperfArray:
-			// }
 			agentid := d.GetAgentId(a.AgentID)
 			t.SetData(a, dbtype, agentid)
 		}

@@ -2,14 +2,27 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"manager/app"
 	"manager/data"
+	"os"
 	"time"
 )
 
 const (
 	DEBUG_FLAG = false
 )
+
+func log_write(data string) {
+	var file, err = os.OpenFile("manager.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		panic(err.Error())
+	}
+	logger := *log.New(file, "", 0)
+	defer file.Close()
+
+	logger.Output(1, data)
+}
 
 func main() {
 	config := app.GetConfig("config.yml")
@@ -105,10 +118,11 @@ func main() {
 			ltp_data := data.LastrealtimeperfArray{}
 			perf_data := data.RealtimeperfArray{}
 			cpu_data := data.RealtimecpuArray{}
+			log_write(fmt.Sprintf("csperf %v\n", csperf))
 
 			for idx, d := range db_handler {
 				dbtype := d.GetTabletype("realtimeperf")
-				d.SetPerfArray(&con_perf_arr, dbtype, false, dbdata[idx].Last, dbdata[idx].Perf, dbdata[idx].Cpu)
+				d.SetPerfArray(&con_perf_arr, dbtype, dbdata[idx].Last, dbdata[idx].Perf, dbdata[idx].Cpu)
 			}
 
 			db_handler[0].SetPerf(csperf, "pg", &ltp_data, &perf_data, &cpu_data)
@@ -138,15 +152,11 @@ func main() {
 					dbdata[idx].Last = &data.LastrealtimeperfArray{}
 					dbdata[idx].Perf = &data.RealtimeperfArray{}
 					dbdata[idx].Cpu = &data.RealtimecpuArray{}
-					d.SetPerfArray(&con_perf_arr, dbtype, true, dbdata[idx].Last, dbdata[idx].Perf, dbdata[idx].Cpu)
+					d.SetPerfArray(&con_perf_arr, dbtype, dbdata[idx].Last, dbdata[idx].Perf, dbdata[idx].Cpu)
 
-					if DEBUG_FLAG {
-						fmt.Printf("realtimeperf before %v %d %d\n", idx, len(con_perf_arr), time.Now().UnixMicro())
-					}
+					log_write(fmt.Sprintf("realtimeperf before %v %d %d\n", idx, len(con_perf_arr), time.Now().UnixMicro()))
 					d.InsertTableArray(dbtype, dbdata[idx].Last, dbdata[idx].Perf, dbdata[idx].Cpu)
-					if DEBUG_FLAG {
-						fmt.Printf("realtimeperf after %v %d %d\n", idx, len(con_perf_arr), time.Now().UnixMicro())
-					}
+					log_write(fmt.Sprintf("realtimeperf after %v %d %d\n", idx, len(con_perf_arr), time.Now().UnixMicro()))
 
 					// 초기화
 					dbdata[idx].Last = &data.LastrealtimeperfArray{}
@@ -161,6 +171,7 @@ func main() {
 			}
 		case cspid := <-ch.ConsumerData.Realtimepid:
 			current_time.Pid = int64(time.Unix(time.Now().Unix(), 0).Unix() / 2)
+			log_write(fmt.Sprintf("csperf %v\n", cspid))
 
 			for idx, d := range db_handler {
 				dbtype := d.GetTabletype("realtimepid")
@@ -178,13 +189,9 @@ func main() {
 					dbdata[idx].Proc = &data.RealtimeprocArray{}
 					d.SetPidArray(&con_pid_arr, dbtype, dbdata[idx].Pid, dbdata[idx].Proc)
 
-					if DEBUG_FLAG {
-						fmt.Printf("realtimepid before %v %d %d\n", idx, len(con_pid_arr), time.Now().UnixMicro())
-					}
+					log_write(fmt.Sprintf("realtimepid before %v %d %d\n", idx, len(con_pid_arr), time.Now().UnixMicro()))
 					d.InsertTableArray(dbtype, dbdata[idx].Pid, dbdata[idx].Proc)
-					if DEBUG_FLAG {
-						fmt.Printf("realtimepid after %v %d %d\n", idx, len(con_pid_arr), time.Now().UnixMicro())
-					}
+					log_write(fmt.Sprintf("realtimepid after %v %d %d\n", idx, len(con_pid_arr), time.Now().UnixMicro()))
 
 					// 초기화
 					dbdata[idx].Pid = &data.RealtimepidArray{}
@@ -199,6 +206,7 @@ func main() {
 		case csdisk := <-ch.ConsumerData.Realtimedisk:
 			current_time.Disk = int64(time.Unix(time.Now().Unix(), 0).Unix() / 2)
 			tcp_data := data.RealtimediskArray{}
+			log_write(fmt.Sprintf("csperf %v\n", csdisk))
 
 			for idx, d := range db_handler {
 				dbtype := d.GetTabletype("realtimedisk")
@@ -222,13 +230,9 @@ func main() {
 					dbdata[idx].Disk = &data.RealtimediskArray{}
 					d.SetDiskArray(&con_disk_arr, dbtype, dbdata[idx].Disk)
 
-					if DEBUG_FLAG {
-						fmt.Printf("realtimedisk before %v %d %d\n", idx, len(con_disk_arr), time.Now().UnixMicro())
-					}
+					log_write(fmt.Sprintf("realtimedisk before %v %d %d\n", idx, len(con_disk_arr), time.Now().UnixMicro()))
 					d.InsertTableArray(dbtype, dbdata[idx].Disk)
-					if DEBUG_FLAG {
-						fmt.Printf("realtimedisk after %v %d %d\n", idx, len(con_disk_arr), time.Now().UnixMicro())
-					}
+					log_write(fmt.Sprintf("realtimedisk after %v %d %d\n", idx, len(con_disk_arr), time.Now().UnixMicro()))
 
 					// 초기화
 					dbdata[idx].Disk = &data.RealtimediskArray{}
@@ -242,6 +246,7 @@ func main() {
 		case csnet := <-ch.ConsumerData.Realtimenet:
 			current_time.Net = int64(time.Unix(time.Now().Unix(), 0).Unix() / 2)
 			tcp_data := data.RealtimenetArray{}
+			log_write(fmt.Sprintf("csperf %v\n", csnet))
 
 			for idx, d := range db_handler {
 				dbtype := d.GetTabletype("realtimenet")
@@ -264,13 +269,9 @@ func main() {
 					dbdata[idx].Net = &data.RealtimenetArray{}
 					d.SetNetArray(&con_net_arr, dbtype, dbdata[idx].Net)
 
-					if DEBUG_FLAG {
-						fmt.Printf("realtimenet before %v %d %d\n", idx, len(con_net_arr), time.Now().UnixMicro())
-					}
+					log_write(fmt.Sprintf("realtimenet before %v %d %d\n", idx, len(con_net_arr), time.Now().UnixMicro()))
 					d.InsertTableArray(dbtype, dbdata[idx].Net)
-					if DEBUG_FLAG {
-						fmt.Printf("realtimenet after %v %d %d\n", idx, len(con_net_arr), time.Now().UnixMicro())
-					}
+					log_write(fmt.Sprintf("realtimenet after %v %d %d\n", idx, len(con_net_arr), time.Now().UnixMicro()))
 
 					// 초기화
 					dbdata[idx].Net = &data.RealtimenetArray{}
