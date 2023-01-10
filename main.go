@@ -10,7 +10,8 @@ import (
 )
 
 const (
-	DEBUG_FLAG = true
+	DEBUG_FLAG      = false
+	TIME_DEBUG_FLAG = true
 )
 
 func log_write(data string) {
@@ -156,11 +157,11 @@ func main() {
 						dbdata[idx].Cpu = &data.RealtimecpuArray{}
 						d.SetPerfArray(&con_perf_arr, dbtype, dbdata[idx].Last, dbdata[idx].Perf, dbdata[idx].Cpu)
 
-						if DEBUG_FLAG {
+						if TIME_DEBUG_FLAG {
 							log_write(fmt.Sprintf("realtimeperf before %v %d %d\n", idx, len(con_perf_arr), time.Now().UnixMicro()))
 						}
 						d.InsertTableArray(dbtype, dbdata[idx].Last, dbdata[idx].Perf, dbdata[idx].Cpu)
-						if DEBUG_FLAG {
+						if TIME_DEBUG_FLAG {
 							log_write(fmt.Sprintf("realtimeperf after %v %d %d\n", idx, len(con_perf_arr), time.Now().UnixMicro()))
 						}
 						// 초기화
@@ -197,11 +198,11 @@ func main() {
 						dbdata[idx].Proc = &data.RealtimeprocArray{}
 						d.SetPidArray(&con_pid_arr, dbtype, dbdata[idx].Pid, dbdata[idx].Proc)
 
-						if DEBUG_FLAG {
+						if TIME_DEBUG_FLAG {
 							log_write(fmt.Sprintf("realtimepid before %v %d %d\n", idx, len(con_pid_arr), time.Now().UnixMicro()))
 						}
 						d.InsertTableArray(dbtype, dbdata[idx].Pid, dbdata[idx].Proc)
-						if DEBUG_FLAG {
+						if TIME_DEBUG_FLAG {
 							log_write(fmt.Sprintf("realtimepid after %v %d %d\n", idx, len(con_pid_arr), time.Now().UnixMicro()))
 						}
 						// 초기화
@@ -244,11 +245,11 @@ func main() {
 						dbdata[idx].Disk = &data.RealtimediskArray{}
 						d.SetDiskArray(&con_disk_arr, dbtype, dbdata[idx].Disk)
 
-						if DEBUG_FLAG {
+						if TIME_DEBUG_FLAG {
 							log_write(fmt.Sprintf("realtimedisk before %v %d %d\n", idx, len(con_disk_arr), time.Now().UnixMicro()))
 						}
 						d.InsertTableArray(dbtype, dbdata[idx].Disk)
-						if DEBUG_FLAG {
+						if TIME_DEBUG_FLAG {
 							log_write(fmt.Sprintf("realtimedisk after %v %d %d\n", idx, len(con_disk_arr), time.Now().UnixMicro()))
 						}
 						// 초기화
@@ -289,11 +290,11 @@ func main() {
 						dbdata[idx].Net = &data.RealtimenetArray{}
 						d.SetNetArray(&con_net_arr, dbtype, dbdata[idx].Net)
 
-						if DEBUG_FLAG {
+						if TIME_DEBUG_FLAG {
 							log_write(fmt.Sprintf("realtimenet before %v %d %d\n", idx, len(con_net_arr), time.Now().UnixMicro()))
 						}
 						d.InsertTableArray(dbtype, dbdata[idx].Net)
-						if DEBUG_FLAG {
+						if TIME_DEBUG_FLAG {
 							log_write(fmt.Sprintf("realtimenet after %v %d %d\n", idx, len(con_net_arr), time.Now().UnixMicro()))
 						}
 						// 초기화
