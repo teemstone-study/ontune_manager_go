@@ -1,5 +1,5 @@
 database:
-  - name: pg
+  - name: pg-hour
     host: 192.168.0.187
     port: 15432
     dbname: ontune

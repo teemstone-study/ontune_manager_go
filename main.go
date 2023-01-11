@@ -116,35 +116,20 @@ func main() {
 		case csperf := <-ch.ConsumerData.Realtimeperf:
 			if csperf.AgentID != "" {
 				current_time.Perf = int64(time.Unix(time.Now().Unix(), 0).Unix() / 2)
-				ltp_data := data.LastrealtimeperfArray{}
-				perf_data := data.RealtimeperfArray{}
-				cpu_data := data.RealtimecpuArray{}
+				// ltp_data := data.LastrealtimeperfArray{}
+				// perf_data := data.RealtimeperfArray{}
+				// cpu_data := data.RealtimecpuArray{}
+
 				if DEBUG_FLAG {
 					log_write(fmt.Sprintf("csperf %v\n", csperf))
 				}
 
-				for idx, d := range db_handler {
-					dbtype := d.GetTabletype("realtimeperf")
-					d.SetPerfArray(&con_perf_arr, dbtype, dbdata[idx].Last, dbdata[idx].Perf, dbdata[idx].Cpu)
-				}
+				// for idx, d := range db_handler {
+				// 	dbtype := d.GetTabletype("realtimeperf")
+				// 	d.SetPerfArray(&con_perf_arr, dbtype, dbdata[idx].Last, dbdata[idx].Perf, dbdata[idx].Cpu)
+				// }
 
-				db_handler[0].SetPerf(csperf, "pg", &ltp_data, &perf_data, &cpu_data)
-				if tcpRequestKeys.IsDataMapping(app.LASTPERF_CODE) {
-					go func() {
-						tcpResponseData <- app.ConvertJson(app.LASTPERF_CODE, ltp_data.GetString())
-					}()
-				}
-				if tcpRequestKeys.IsDataMapping(app.BASIC_CODE) {
-					go func() {
-						tcpResponseData <- app.ConvertJson(app.BASIC_CODE, perf_data.GetString())
-					}()
-				}
-				if tcpRequestKeys.IsDataMapping(app.CPU_CODE) {
-					go func() {
-						tcpResponseData <- app.ConvertJson(app.CPU_CODE, cpu_data.GetString())
-					}()
-				}
-
+				// db_handler[0].SetPerf(csperf, "pg", &ltp_data, &perf_data, &cpu_data)
 				if len(con_perf_arr) > 0 && current_time.Perf > previous_time.Perf {
 					con_perf_arr = app.RemoveDuplicate(con_perf_arr).([]data.AgentRealTimePerf)
 
@@ -160,6 +145,27 @@ func main() {
 						if TIME_DEBUG_FLAG {
 							log_write(fmt.Sprintf("realtimeperf before %v %d %d\n", idx, len(con_perf_arr), time.Now().UnixMicro()))
 						}
+
+						if idx == 0 && tcpRequestKeys.IsDataMapping(app.LASTPERF_CODE) {
+							go func() {
+								tcpResponseData <- app.ConvertJson(app.LASTPERF_CODE, dbdata[idx].Last.GetString())
+							}()
+						}
+						if idx == 0 && tcpRequestKeys.IsDataMapping(app.BASIC_CODE) {
+							go func() {
+								tcpResponseData <- app.ConvertJson(app.BASIC_CODE, dbdata[idx].Perf.GetString())
+							}()
+						}
+						if idx == 0 && tcpRequestKeys.IsDataMapping(app.CPU_CODE) {
+							go func() {
+								tcpResponseData <- app.ConvertJson(app.CPU_CODE, dbdata[idx].Cpu.GetString())
+							}()
+						}
+
+						if TIME_DEBUG_FLAG {
+							log_write(fmt.Sprintf("realtimeperf middle %v %d %d\n", idx, len(con_perf_arr), time.Now().UnixMicro()))
+						}
+
 						d.InsertTableArray(dbtype, dbdata[idx].Last, dbdata[idx].Perf, dbdata[idx].Cpu)
 						if TIME_DEBUG_FLAG {
 							log_write(fmt.Sprintf("realtimeperf after %v %d %d\n", idx, len(con_perf_arr), time.Now().UnixMicro()))
@@ -182,10 +188,10 @@ func main() {
 				if DEBUG_FLAG {
 					log_write(fmt.Sprintf("cspid %v\n", cspid))
 				}
-				for idx, d := range db_handler {
-					dbtype := d.GetTabletype("realtimepid")
-					d.SetPidArray(&con_pid_arr, dbtype, dbdata[idx].Pid, dbdata[idx].Proc)
-				}
+				// for idx, d := range db_handler {
+				// 	dbtype := d.GetTabletype("realtimepid")
+				// 	d.SetPidArray(&con_pid_arr, dbtype, dbdata[idx].Pid, dbdata[idx].Proc)
+				// }
 
 				if len(con_pid_arr) > 0 && current_time.Pid > previous_time.Pid {
 					con_pid_arr = app.RemoveDuplicate(con_pid_arr).([]data.AgentRealTimePID)
@@ -219,21 +225,15 @@ func main() {
 		case csdisk := <-ch.ConsumerData.Realtimedisk:
 			if csdisk.AgentID != "" {
 				current_time.Disk = int64(time.Unix(time.Now().Unix(), 0).Unix() / 2)
-				tcp_data := data.RealtimediskArray{}
+				// tcp_data := data.RealtimediskArray{}
+
 				if DEBUG_FLAG {
 					log_write(fmt.Sprintf("csdisk %v\n", csdisk))
 				}
-				for idx, d := range db_handler {
-					dbtype := d.GetTabletype("realtimedisk")
-					d.SetDiskArray(&con_disk_arr, dbtype, dbdata[idx].Disk)
-				}
-
-				if tcpRequestKeys.IsDataMapping(app.DISK_CODE) {
-					go func() {
-						db_handler[0].SetDisk(csdisk, "pg", &tcp_data)
-						tcpResponseData <- app.ConvertJson(app.DISK_CODE, tcp_data.GetString())
-					}()
-				}
+				// for idx, d := range db_handler {
+				// 	dbtype := d.GetTabletype("realtimedisk")
+				// 	d.SetDiskArray(&con_disk_arr, dbtype, dbdata[idx].Disk)
+				// }
 
 				if len(con_disk_arr) > 0 && current_time.Disk > previous_time.Disk {
 					con_disk_arr = app.RemoveDuplicate(con_disk_arr).([]data.AgentRealTimeDisk)
@@ -247,6 +247,17 @@ func main() {
 
 						if TIME_DEBUG_FLAG {
 							log_write(fmt.Sprintf("realtimedisk before %v %d %d\n", idx, len(con_disk_arr), time.Now().UnixMicro()))
+						}
+
+						if idx == 0 && tcpRequestKeys.IsDataMapping(app.DISK_CODE) {
+							go func() {
+								// db_handler[0].SetDisk(csdisk, "pg", dbdata[idx].Disk)
+								tcpResponseData <- app.ConvertJson(app.DISK_CODE, dbdata[idx].Disk.GetString())
+							}()
+						}
+
+						if TIME_DEBUG_FLAG {
+							log_write(fmt.Sprintf("realtimedisk middle %v %d %d\n", idx, len(con_disk_arr), time.Now().UnixMicro()))
 						}
 						d.InsertTableArray(dbtype, dbdata[idx].Disk)
 						if TIME_DEBUG_FLAG {
@@ -265,21 +276,16 @@ func main() {
 		case csnet := <-ch.ConsumerData.Realtimenet:
 			if csnet.AgentID != "" {
 				current_time.Net = int64(time.Unix(time.Now().Unix(), 0).Unix() / 2)
-				tcp_data := data.RealtimenetArray{}
+				// tcp_data := data.RealtimenetArray{}
+
 				if DEBUG_FLAG {
 					log_write(fmt.Sprintf("csnet %v\n", csnet))
 				}
-				for idx, d := range db_handler {
-					dbtype := d.GetTabletype("realtimenet")
-					d.SetNetArray(&con_net_arr, dbtype, dbdata[idx].Net)
-				}
 
-				if tcpRequestKeys.IsDataMapping(app.NET_CODE) {
-					go func() {
-						db_handler[0].SetNet(csnet, "pg", &tcp_data)
-						tcpResponseData <- app.ConvertJson(app.NET_CODE, tcp_data.GetString())
-					}()
-				}
+				// for idx, d := range db_handler {
+				// 	dbtype := d.GetTabletype("realtimenet")
+				// 	d.SetNetArray(&con_net_arr, dbtype, dbdata[idx].Net)
+				// }
 
 				if len(con_net_arr) > 0 && current_time.Net > previous_time.Net {
 					con_net_arr = app.RemoveDuplicate(con_net_arr).([]data.AgentRealTimeNet)
@@ -293,6 +299,18 @@ func main() {
 						if TIME_DEBUG_FLAG {
 							log_write(fmt.Sprintf("realtimenet before %v %d %d\n", idx, len(con_net_arr), time.Now().UnixMicro()))
 						}
+
+						if tcpRequestKeys.IsDataMapping(app.NET_CODE) {
+							go func() {
+								//db_handler[0].SetNet(csnet, "pg", &tcp_data)
+								tcpResponseData <- app.ConvertJson(app.NET_CODE, dbdata[idx].Net.GetString())
+							}()
+						}
+
+						if TIME_DEBUG_FLAG {
+							log_write(fmt.Sprintf("realtimenet middle %v %d %d\n", idx, len(con_net_arr), time.Now().UnixMicro()))
+						}
+
 						d.InsertTableArray(dbtype, dbdata[idx].Net)
 						if TIME_DEBUG_FLAG {
 							log_write(fmt.Sprintf("realtimenet after %v %d %d\n", idx, len(con_net_arr), time.Now().UnixMicro()))
