@@ -85,16 +85,16 @@ func main() {
 			// 여기에서는 변경될 Agent ID만 넘기는 형태가 됨
 			for _, d := range db_handler {
 				if tcpRequestKeys.IsDataMapping(app.HOST_CODE) {
-					tcpResponseData <- app.ConvertJson(app.HOST_CODE, state_agent_str)
+					tcpResponseData <- app.ConvertJsonString(app.HOST_CODE, state_agent_str)
 				}
 
 				d.DemoHostStateChange(state_agent_str)
 			}
 		case lrtp := <-ch.Lastrealtimeperf:
 			if tcpRequestKeys.IsDataMapping(app.LASTPERF_CODE) {
-				for _, l := range lrtp.GetArrString() {
-					tcpResponseData <- app.ConvertJson(app.LASTPERF_CODE, l)
-				}
+				//for _, l := range lrtp.GetArrString() {
+				tcpResponseData <- app.ConvertJson(app.LASTPERF_CODE, lrtp.GetArrString())
+				//}
 			}
 			for _, d := range db_handler {
 				d.DemoBptUpdate(lrtp)
@@ -108,7 +108,7 @@ func main() {
 					// TCP 데이터는 1회만 넘기도록 해야 함
 					if idx == 0 && tcpRequestKeys.IsDataMapping(app.HOST_CODE) {
 						for _, a := range agentinfo_arr.GetArrString() {
-							tcpResponseData <- app.ConvertJson(app.HOST_CODE, a)
+							tcpResponseData <- app.ConvertJsonString(app.HOST_CODE, a)
 						}
 					}
 				}
@@ -148,6 +148,7 @@ func main() {
 
 						if idx == 0 && tcpRequestKeys.IsDataMapping(app.LASTPERF_CODE) {
 							go func() {
+
 								tcpResponseData <- app.ConvertJson(app.LASTPERF_CODE, dbdata[idx].Last.GetString())
 							}()
 						}

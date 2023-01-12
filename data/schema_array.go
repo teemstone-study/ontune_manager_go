@@ -1,6 +1,7 @@
 package data
 
 import (
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -8,6 +9,10 @@ import (
 
 	"github.com/lib/pq"
 )
+
+type myJSON struct {
+	Data []string
+}
 
 func getTimeType(dbtype string) string {
 	switch dbtype {
@@ -29,8 +34,8 @@ type TableSetArrayInner interface {
 }
 
 type LastrealtimeperfArray struct {
-	Ontunetime    []int64
 	Agentid       []int
+	Ontunetime    []int64
 	Hostname      []string
 	User          []int
 	Sys           []int
@@ -91,8 +96,8 @@ type LastrealtimeperfArray struct {
 
 func (r *LastrealtimeperfArray) SetData(data interface{}, dbtype string, agentid int, strs ...string) {
 	d := data.(AgentRealTimePerf)
-	r.Ontunetime = append(r.Ontunetime, d.Agenttime.Unix())
 	r.Agentid = append(r.Agentid, agentid)
+	r.Ontunetime = append(r.Ontunetime, d.Agenttime.Unix())
 	r.Hostname = append(r.Hostname, "")
 	r.User = append(r.User, d.User)
 	r.Sys = append(r.Sys, d.Sys)
@@ -157,8 +162,8 @@ func (r *LastrealtimeperfArray) GetInsertStmt(tablename string, timetype string)
 
 func (r *LastrealtimeperfArray) GetArgs() []interface{} {
 	data := make([]interface{}, 0)
-	data = append(data, pq.Array(r.Ontunetime))
 	data = append(data, pq.Array(r.Agentid))
+	data = append(data, pq.Array(r.Ontunetime))
 	data = append(data, pq.StringArray(r.Hostname))
 	data = append(data, pq.Array(r.User))
 	data = append(data, pq.Array(r.Sys))
@@ -225,8 +230,8 @@ func (r *LastrealtimeperfArray) GetArrString() []string {
 
 	for i := 0; i < size; i++ {
 		d := make([]string, 0)
-		d = append(d, fmt.Sprintf("%v", r.Ontunetime[i]))
 		d = append(d, strconv.Itoa(r.Agentid[i]))
+		d = append(d, fmt.Sprintf("%v", r.Ontunetime[i]))
 		d = append(d, r.Hostname[i])
 		d = append(d, strconv.Itoa(r.User[i]))
 		d = append(d, strconv.Itoa(r.Sys[i]))
@@ -290,14 +295,14 @@ func (r *LastrealtimeperfArray) GetArrString() []string {
 	return arr
 }
 
-func (r *LastrealtimeperfArray) GetString() string {
-	arr := make([]string, 0)
+func (r *LastrealtimeperfArray) GetString() [][]string {
+	var arr [][]string
 	size := len(r.Agentid)
-
+	var encjson []byte
 	for i := 0; i < size; i++ {
 		d := make([]string, 0)
-		d = append(d, fmt.Sprintf("%v", r.Ontunetime[i]))
 		d = append(d, strconv.Itoa(r.Agentid[i]))
+		d = append(d, fmt.Sprintf("%v", r.Ontunetime[i]))
 		d = append(d, r.Hostname[i])
 		d = append(d, strconv.Itoa(r.User[i]))
 		d = append(d, strconv.Itoa(r.Sys[i]))
@@ -355,15 +360,31 @@ func (r *LastrealtimeperfArray) GetString() string {
 		d = append(d, strconv.Itoa(r.Dummy29[i]))
 		d = append(d, strconv.Itoa(r.Dummy30[i]))
 
-		arr = append(arr, strings.Join(d, ","))
-	}
+		arr = append(arr, d)
+		/*
+			jsondata := &myJSON{Data: []string{fmt.Sprintf("%v", r.Ontunetime[i]), strconv.Itoa(r.Agentid[i]), r.Hostname[i], strconv.Itoa(r.User[i]), strconv.Itoa(r.Sys[i]),
+				strconv.Itoa(r.Wait[i]), strconv.Itoa(r.Idle[i]), strconv.Itoa(r.Memoryused[i]), strconv.Itoa(r.Filecache[i]), strconv.Itoa(r.Memorysize[i]), strconv.Itoa(r.Avm[i]),
+				strconv.Itoa(r.Swapused[i]), strconv.Itoa(r.Swapsize[i]), strconv.Itoa(r.Diskiorate[i]), strconv.Itoa(r.Networkiorate[i]), r.Topproc[i], r.Topuser[i],
+				strconv.Itoa(r.Topproccount[i]), strconv.Itoa(r.Topcpu[i]), r.Topdisk[i], r.Topvg[i], strconv.Itoa(r.Topbusy[i]), strconv.Itoa(r.Maxcpu[i]), strconv.Itoa(r.Maxmem[i]),
+				strconv.Itoa(r.Maxswap[i]), strconv.Itoa(r.Maxdisk[i]), strconv.Itoa(r.Diskiops[i]), strconv.Itoa(r.Networkiops[i]), strconv.Itoa(r.Dummy01[i]), strconv.Itoa(r.Dummy02[i]),
+				strconv.Itoa(r.Dummy03[i]), strconv.Itoa(r.Dummy04[i]), strconv.Itoa(r.Dummy05[i]), strconv.Itoa(r.Dummy06[i]), strconv.Itoa(r.Dummy07[i]), strconv.Itoa(r.Dummy08[i]),
+				strconv.Itoa(r.Dummy09[i]), strconv.Itoa(r.Dummy10[i]), strconv.Itoa(r.Dummy11[i]), strconv.Itoa(r.Dummy12[i]), strconv.Itoa(r.Dummy13[i]), strconv.Itoa(r.Dummy14[i]),
+				strconv.Itoa(r.Dummy15[i]), strconv.Itoa(r.Dummy16[i]), strconv.Itoa(r.Dummy17[i]), strconv.Itoa(r.Dummy18[i]), strconv.Itoa(r.Dummy19[i]), strconv.Itoa(r.Dummy20[i]),
+				strconv.Itoa(r.Dummy21[i]), strconv.Itoa(r.Dummy22[i]), strconv.Itoa(r.Dummy23[i]), strconv.Itoa(r.Dummy24[i]), strconv.Itoa(r.Dummy25[i]), strconv.Itoa(r.Dummy26[i]),
+				strconv.Itoa(r.Dummy27[i]), strconv.Itoa(r.Dummy28[i]), strconv.Itoa(r.Dummy29[i]), strconv.Itoa(r.Dummy30[i])}}
 
-	return strings.Join(arr, ",")
+			encjson, _ = json.Marshal(jsondata)
+		*/
+	}
+	encjson, _ = json.Marshal(arr)
+	fmt.Println(encjson)
+	return arr
+	//return strings.Join(arr, ",")
 }
 
 type RealtimeperfArray struct {
-	Ontunetime       []interface{}
 	Agenttime        []int
+	Ontunetime       []interface{}
 	Agentid          []int
 	User             []int
 	Sys              []int
@@ -425,8 +446,9 @@ type RealtimeperfArray struct {
 
 func (r *RealtimeperfArray) SetData(data interface{}, dbtype string, agentid int, strs ...string) {
 	d := data.(AgentRealTimePerf)
-
+	r.Agentid = append(r.Agentid, agentid)
 	switch dbtype {
+
 	case "pg":
 		r.Ontunetime = append(r.Ontunetime, d.Agenttime.Unix())
 	case "ts":
@@ -434,7 +456,6 @@ func (r *RealtimeperfArray) SetData(data interface{}, dbtype string, agentid int
 	}
 
 	r.Agenttime = append(r.Agenttime, int(d.Agenttime.Unix()))
-	r.Agentid = append(r.Agentid, agentid)
 	r.User = append(r.User, d.User)
 	r.Sys = append(r.Sys, d.Sys)
 	r.Wait = append(r.Wait, d.Wait)
@@ -499,9 +520,9 @@ func (r *RealtimeperfArray) GetInsertStmt(tablename string, dbtype string) strin
 
 func (r *RealtimeperfArray) GetArgs() []interface{} {
 	data := make([]interface{}, 0)
+	data = append(data, pq.Array(r.Agentid))
 	data = append(data, pq.Array(r.Ontunetime))
 	data = append(data, pq.Array(r.Agenttime))
-	data = append(data, pq.Array(r.Agentid))
 	data = append(data, pq.Array(r.User))
 	data = append(data, pq.Array(r.Sys))
 	data = append(data, pq.Array(r.Wait))
@@ -567,9 +588,9 @@ func (r *RealtimeperfArray) GetArrString() []string {
 
 	for i := 0; i < size; i++ {
 		d := make([]string, 0)
+		d = append(d, strconv.Itoa(r.Agentid[i]))
 		d = append(d, fmt.Sprintf("%v", r.Ontunetime[i]))
 		d = append(d, strconv.Itoa(r.Agenttime[i]))
-		d = append(d, strconv.Itoa(r.Agentid[i]))
 		d = append(d, strconv.Itoa(r.User[i]))
 		d = append(d, strconv.Itoa(r.Sys[i]))
 		d = append(d, strconv.Itoa(r.Wait[i]))
@@ -633,15 +654,15 @@ func (r *RealtimeperfArray) GetArrString() []string {
 	return arr
 }
 
-func (r *RealtimeperfArray) GetString() string {
-	arr := make([]string, 0)
+func (r *RealtimeperfArray) GetString() [][]string {
+	var arr [][]string
 	size := len(r.Agentid)
 
 	for i := 0; i < size; i++ {
 		d := make([]string, 0)
+		d = append(d, strconv.Itoa(r.Agentid[i]))
 		d = append(d, fmt.Sprintf("%v", r.Ontunetime[i]))
 		d = append(d, strconv.Itoa(r.Agenttime[i]))
-		d = append(d, strconv.Itoa(r.Agentid[i]))
 		d = append(d, strconv.Itoa(r.User[i]))
 		d = append(d, strconv.Itoa(r.Sys[i]))
 		d = append(d, strconv.Itoa(r.Wait[i]))
@@ -699,16 +720,16 @@ func (r *RealtimeperfArray) GetString() string {
 		d = append(d, strconv.Itoa(r.Swapused_Mb[i]))
 		d = append(d, strconv.Itoa(r.Dusm[i]))
 
-		arr = append(arr, strings.Join(d, ","))
+		arr = append(arr, d)
 	}
 
-	return strings.Join(arr, ",")
+	return arr
 }
 
 type RealtimecpuArray struct {
+	Agentid       []int
 	Ontunetime    []interface{}
 	Agenttime     []int
-	Agentid       []int
 	Index         []int
 	User          []int
 	Sys           []int
@@ -724,7 +745,7 @@ type RealtimecpuArray struct {
 
 func (r *RealtimecpuArray) SetData(data interface{}, dbtype string, agentid int, strs ...string) {
 	d := data.(AgentRealTimePerf)
-
+	r.Agentid = append(r.Agentid, agentid)
 	switch dbtype {
 	case "pg":
 		r.Ontunetime = append(r.Ontunetime, d.Agenttime.Unix())
@@ -733,7 +754,6 @@ func (r *RealtimecpuArray) SetData(data interface{}, dbtype string, agentid int,
 	}
 
 	r.Agenttime = append(r.Agenttime, int(d.Agenttime.Unix()))
-	r.Agentid = append(r.Agentid, agentid)
 	r.Index = append(r.Index, 0)
 	r.User = append(r.User, d.User)
 	r.Sys = append(r.Sys, d.Sys)
@@ -753,9 +773,9 @@ func (r *RealtimecpuArray) GetInsertStmt(tablename string, dbtype string) string
 
 func (r *RealtimecpuArray) GetArgs() []interface{} {
 	data := make([]interface{}, 0)
+	data = append(data, pq.Array(r.Agentid))
 	data = append(data, pq.Array(r.Ontunetime))
 	data = append(data, pq.Array(r.Agenttime))
-	data = append(data, pq.Array(r.Agentid))
 	data = append(data, pq.Array(r.Index))
 	data = append(data, pq.Array(r.User))
 	data = append(data, pq.Array(r.Sys))
@@ -776,9 +796,9 @@ func (r *RealtimecpuArray) GetArrString() []string {
 
 	for i := 0; i < size; i++ {
 		d := make([]string, 0)
+		d = append(d, strconv.Itoa(r.Agentid[i]))
 		d = append(d, fmt.Sprintf("%v", r.Ontunetime[i]))
 		d = append(d, strconv.Itoa(r.Agenttime[i]))
-		d = append(d, strconv.Itoa(r.Agentid[i]))
 		d = append(d, strconv.Itoa(r.Index[i]))
 		d = append(d, strconv.Itoa(r.User[i]))
 		d = append(d, strconv.Itoa(r.Sys[i]))
@@ -797,15 +817,15 @@ func (r *RealtimecpuArray) GetArrString() []string {
 	return arr
 }
 
-func (r *RealtimecpuArray) GetString() string {
-	arr := make([]string, 0)
+func (r *RealtimecpuArray) GetString() [][]string {
+	var arr [][]string
 	size := len(r.Agentid)
 
 	for i := 0; i < size; i++ {
 		d := make([]string, 0)
+		d = append(d, strconv.Itoa(r.Agentid[i]))
 		d = append(d, fmt.Sprintf("%v", r.Ontunetime[i]))
 		d = append(d, strconv.Itoa(r.Agenttime[i]))
-		d = append(d, strconv.Itoa(r.Agentid[i]))
 		d = append(d, strconv.Itoa(r.Index[i]))
 		d = append(d, strconv.Itoa(r.User[i]))
 		d = append(d, strconv.Itoa(r.Sys[i]))
@@ -818,16 +838,16 @@ func (r *RealtimecpuArray) GetString() string {
 		d = append(d, strconv.Itoa(r.Systemcall[i]))
 		d = append(d, strconv.Itoa(r.Contextswitch[i]))
 
-		arr = append(arr, strings.Join(d, ","))
+		arr = append(arr, d)
 	}
 
-	return strings.Join(arr, ",")
+	return arr
 }
 
 type RealtimediskArray struct {
+	Agentid      []int
 	Ontunetime   []interface{}
 	Agenttime    []int
-	Agentid      []int
 	Ionameid     []int
 	Readrate     []int
 	Writerate    []int
@@ -840,7 +860,7 @@ type RealtimediskArray struct {
 
 func (r *RealtimediskArray) SetData(data interface{}, dbtype string, agentid int, agenttime time.Time, ids ...int) {
 	d := data.(AgentRealTimeDiskInner)
-
+	r.Agentid = append(r.Agentid, agentid)
 	switch dbtype {
 	case "pg":
 		r.Ontunetime = append(r.Ontunetime, agenttime.Unix())
@@ -849,7 +869,6 @@ func (r *RealtimediskArray) SetData(data interface{}, dbtype string, agentid int
 	}
 
 	r.Agenttime = append(r.Agenttime, int(agenttime.Unix()))
-	r.Agentid = append(r.Agentid, agentid)
 	r.Ionameid = append(r.Ionameid, ids[0])
 	r.Readrate = append(r.Readrate, d.Readrate)
 	r.Writerate = append(r.Writerate, d.Writerate)
@@ -866,9 +885,9 @@ func (r *RealtimediskArray) GetInsertStmt(tablename string, dbtype string) strin
 
 func (r *RealtimediskArray) GetArgs() []interface{} {
 	data := make([]interface{}, 0)
+	data = append(data, pq.Array(r.Agentid))
 	data = append(data, pq.Array(r.Ontunetime))
 	data = append(data, pq.Array(r.Agenttime))
-	data = append(data, pq.Array(r.Agentid))
 	data = append(data, pq.Array(r.Ionameid))
 	data = append(data, pq.Array(r.Readrate))
 	data = append(data, pq.Array(r.Writerate))
@@ -887,9 +906,9 @@ func (r *RealtimediskArray) GetArrString() []string {
 
 	for i := 0; i < size; i++ {
 		d := make([]string, 0)
+		d = append(d, strconv.Itoa(r.Agentid[i]))
 		d = append(d, fmt.Sprintf("%v", r.Ontunetime[i]))
 		d = append(d, strconv.Itoa(r.Agenttime[i]))
-		d = append(d, strconv.Itoa(r.Agentid[i]))
 		d = append(d, strconv.Itoa(r.Ionameid[i]))
 		d = append(d, strconv.Itoa(r.Readrate[i]))
 		d = append(d, strconv.Itoa(r.Writerate[i]))
@@ -905,15 +924,15 @@ func (r *RealtimediskArray) GetArrString() []string {
 	return arr
 }
 
-func (r *RealtimediskArray) GetString() string {
-	arr := make([]string, 0)
+func (r *RealtimediskArray) GetString() [][]string {
+	var arr [][]string
 	size := len(r.Agentid)
 
 	for i := 0; i < size; i++ {
 		d := make([]string, 0)
+		d = append(d, strconv.Itoa(r.Agentid[i]))
 		d = append(d, fmt.Sprintf("%v", r.Ontunetime[i]))
 		d = append(d, strconv.Itoa(r.Agenttime[i]))
-		d = append(d, strconv.Itoa(r.Agentid[i]))
 		d = append(d, strconv.Itoa(r.Ionameid[i]))
 		d = append(d, strconv.Itoa(r.Readrate[i]))
 		d = append(d, strconv.Itoa(r.Writerate[i]))
@@ -923,16 +942,16 @@ func (r *RealtimediskArray) GetString() string {
 		d = append(d, strconv.Itoa(r.Readsvctime[i]))
 		d = append(d, strconv.Itoa(r.Writesvctime[i]))
 
-		arr = append(arr, strings.Join(d, ","))
+		arr = append(arr, d)
 	}
 
-	return strings.Join(arr, ",")
+	return arr
 }
 
 type RealtimenetArray struct {
+	Agentid    []int
 	Ontunetime []interface{}
 	Agenttime  []int
-	Agentid    []int
 	Ionameid   []int
 	Readrate   []int
 	Writerate  []int
@@ -944,7 +963,7 @@ type RealtimenetArray struct {
 
 func (r *RealtimenetArray) SetData(data interface{}, dbtype string, agentid int, agenttime time.Time, ids ...int) {
 	d := data.(AgentRealTimeNetInner)
-
+	r.Agentid = append(r.Agentid, agentid)
 	switch dbtype {
 	case "pg":
 		r.Ontunetime = append(r.Ontunetime, agenttime.Unix())
@@ -953,7 +972,6 @@ func (r *RealtimenetArray) SetData(data interface{}, dbtype string, agentid int,
 	}
 
 	r.Agenttime = append(r.Agenttime, int(agenttime.Unix()))
-	r.Agentid = append(r.Agentid, agentid)
 	r.Ionameid = append(r.Ionameid, ids[0])
 	r.Readrate = append(r.Readrate, d.Readrate)
 	r.Writerate = append(r.Writerate, d.Writerate)
@@ -969,9 +987,9 @@ func (r *RealtimenetArray) GetInsertStmt(tablename string, dbtype string) string
 
 func (r *RealtimenetArray) GetArgs() []interface{} {
 	data := make([]interface{}, 0)
+	data = append(data, pq.Array(r.Agentid))
 	data = append(data, pq.Array(r.Ontunetime))
 	data = append(data, pq.Array(r.Agenttime))
-	data = append(data, pq.Array(r.Agentid))
 	data = append(data, pq.Array(r.Ionameid))
 	data = append(data, pq.Array(r.Readrate))
 	data = append(data, pq.Array(r.Writerate))
@@ -983,15 +1001,15 @@ func (r *RealtimenetArray) GetArgs() []interface{} {
 	return data
 }
 
-func (r *RealtimenetArray) GetString() string {
-	arr := make([]string, 0)
+func (r *RealtimenetArray) GetString() [][]string {
+	var arr [][]string
 	size := len(r.Agentid)
 
 	for i := 0; i < size; i++ {
 		d := make([]string, 0)
+		d = append(d, strconv.Itoa(r.Agentid[i]))
 		d = append(d, fmt.Sprintf("%v", r.Ontunetime[i]))
 		d = append(d, strconv.Itoa(r.Agenttime[i]))
-		d = append(d, strconv.Itoa(r.Agentid[i]))
 		d = append(d, strconv.Itoa(r.Ionameid[i]))
 		d = append(d, strconv.Itoa(r.Readrate[i]))
 		d = append(d, strconv.Itoa(r.Writerate[i]))
@@ -1000,10 +1018,10 @@ func (r *RealtimenetArray) GetString() string {
 		d = append(d, strconv.Itoa(r.Errorps[i]))
 		d = append(d, strconv.Itoa(r.Collision[i]))
 
-		arr = append(arr, strings.Join(d, ","))
+		arr = append(arr, d)
 	}
 
-	return strings.Join(arr, ",")
+	return arr
 }
 
 func (r *RealtimenetArray) GetArrString() []string {
@@ -1012,9 +1030,9 @@ func (r *RealtimenetArray) GetArrString() []string {
 
 	for i := 0; i < size; i++ {
 		d := make([]string, 0)
+		d = append(d, strconv.Itoa(r.Agentid[i]))
 		d = append(d, fmt.Sprintf("%v", r.Ontunetime[i]))
 		d = append(d, strconv.Itoa(r.Agenttime[i]))
-		d = append(d, strconv.Itoa(r.Agentid[i]))
 		d = append(d, strconv.Itoa(r.Ionameid[i]))
 		d = append(d, strconv.Itoa(r.Readrate[i]))
 		d = append(d, strconv.Itoa(r.Writerate[i]))
@@ -1030,9 +1048,9 @@ func (r *RealtimenetArray) GetArrString() []string {
 }
 
 type RealtimepidArray struct {
+	Agentid    []int
 	Ontunetime []interface{}
 	Agenttime  []int
-	Agentid    []int
 	Pid        []int
 	Ppid       []int
 	Uid        []int
@@ -1056,7 +1074,7 @@ type RealtimepidArray struct {
 
 func (r *RealtimepidArray) SetData(data interface{}, dbtype string, agentid int, agenttime time.Time, ids ...int) {
 	d := data.(AgentRealTimePIDInner)
-
+	r.Agentid = append(r.Agentid, agentid)
 	switch dbtype {
 	case "pg":
 		r.Ontunetime = append(r.Ontunetime, agenttime.Unix())
@@ -1065,7 +1083,6 @@ func (r *RealtimepidArray) SetData(data interface{}, dbtype string, agentid int,
 	}
 
 	r.Agenttime = append(r.Agenttime, int(agenttime.Unix()))
-	r.Agentid = append(r.Agentid, agentid)
 	r.Pid = append(r.Pid, d.Pid)
 	r.Ppid = append(r.Ppid, d.Ppid)
 	r.Uid = append(r.Uid, d.Uid)
@@ -1093,9 +1110,9 @@ func (r *RealtimepidArray) GetInsertStmt(tablename string, dbtype string) string
 
 func (r *RealtimepidArray) GetArgs() []interface{} {
 	data := make([]interface{}, 0)
+	data = append(data, pq.Array(r.Agentid))
 	data = append(data, pq.Array(r.Ontunetime))
 	data = append(data, pq.Array(r.Agenttime))
-	data = append(data, pq.Array(r.Agentid))
 	data = append(data, pq.Array(r.Pid))
 	data = append(data, pq.Array(r.Ppid))
 	data = append(data, pq.Array(r.Uid))
@@ -1125,9 +1142,9 @@ func (r *RealtimepidArray) GetArrString() []string {
 
 	for i := 0; i < size; i++ {
 		d := make([]string, 0)
+		d = append(d, strconv.Itoa(r.Agentid[i]))
 		d = append(d, fmt.Sprintf("%v", r.Ontunetime[i]))
 		d = append(d, strconv.Itoa(r.Agenttime[i]))
-		d = append(d, strconv.Itoa(r.Agentid[i]))
 		d = append(d, strconv.Itoa(r.Pid[i]))
 		d = append(d, strconv.Itoa(r.Ppid[i]))
 		d = append(d, strconv.Itoa(r.Uid[i]))
@@ -1154,15 +1171,15 @@ func (r *RealtimepidArray) GetArrString() []string {
 	return arr
 }
 
-func (r *RealtimepidArray) GetString() string {
-	arr := make([]string, 0)
+func (r *RealtimepidArray) GetString() [][]string {
+	var arr [][]string
 	size := len(r.Agentid)
 
 	for i := 0; i < size; i++ {
 		d := make([]string, 0)
+		d = append(d, strconv.Itoa(r.Agentid[i]))
 		d = append(d, fmt.Sprintf("%v", r.Ontunetime[i]))
 		d = append(d, strconv.Itoa(r.Agenttime[i]))
-		d = append(d, strconv.Itoa(r.Agentid[i]))
 		d = append(d, strconv.Itoa(r.Pid[i]))
 		d = append(d, strconv.Itoa(r.Ppid[i]))
 		d = append(d, strconv.Itoa(r.Uid[i]))
@@ -1183,16 +1200,16 @@ func (r *RealtimepidArray) GetString() string {
 		d = append(d, strconv.Itoa(r.Pvbytes[i]))
 		d = append(d, strconv.Itoa(r.Pgpool[i]))
 
-		arr = append(arr, strings.Join(d, ","))
+		arr = append(arr, d)
 	}
 
-	return strings.Join(arr, ",")
+	return arr
 }
 
 type RealtimeprocArray struct {
+	Agentid    []int
 	Ontunetime []interface{}
 	Agenttime  []int
-	Agentid    []int
 	Cmdid      []int
 	Userid     []int
 	Usr        []int
@@ -1210,7 +1227,7 @@ type RealtimeprocArray struct {
 
 func (r *RealtimeprocArray) SetData(data interface{}, dbtype string, agentid int, agenttime time.Time, ids ...int) {
 	d := data.(AgentRealTimePIDInner)
-
+	r.Agentid = append(r.Agentid, agentid)
 	switch dbtype {
 	case "pg":
 		r.Ontunetime = append(r.Ontunetime, agenttime.Unix())
@@ -1218,7 +1235,6 @@ func (r *RealtimeprocArray) SetData(data interface{}, dbtype string, agentid int
 		r.Ontunetime = append(r.Ontunetime, agenttime)
 	}
 	r.Agenttime = append(r.Agenttime, int(agenttime.Unix()))
-	r.Agentid = append(r.Agentid, agentid)
 	r.Cmdid = append(r.Cmdid, ids[0])
 	r.Userid = append(r.Userid, ids[1])
 	r.Usr = append(r.Usr, d.Usr)
@@ -1240,9 +1256,9 @@ func (r *RealtimeprocArray) GetInsertStmt(tablename string, dbtype string) strin
 
 func (r *RealtimeprocArray) GetArgs() []interface{} {
 	data := make([]interface{}, 0)
+	data = append(data, pq.Array(r.Agentid))
 	data = append(data, pq.Array(r.Ontunetime))
 	data = append(data, pq.Array(r.Agenttime))
-	data = append(data, pq.Array(r.Agentid))
 	data = append(data, pq.Array(r.Cmdid))
 	data = append(data, pq.Array(r.Userid))
 	data = append(data, pq.Array(r.Usr))
@@ -1266,9 +1282,9 @@ func (r *RealtimeprocArray) GetArrString() []string {
 
 	for i := 0; i < size; i++ {
 		d := make([]string, 0)
+		d = append(d, strconv.Itoa(r.Agentid[i]))
 		d = append(d, fmt.Sprintf("%v", r.Ontunetime[i]))
 		d = append(d, strconv.Itoa(r.Agenttime[i]))
-		d = append(d, strconv.Itoa(r.Agentid[i]))
 		d = append(d, strconv.Itoa(r.Cmdid[i]))
 		d = append(d, strconv.Itoa(r.Userid[i]))
 		d = append(d, strconv.Itoa(r.Usr[i]))
@@ -1289,15 +1305,15 @@ func (r *RealtimeprocArray) GetArrString() []string {
 	return arr
 }
 
-func (r *RealtimeprocArray) GetString() string {
-	arr := make([]string, 0)
+func (r *RealtimeprocArray) GetString() [][]string {
+	var arr [][]string
 	size := len(r.Agentid)
 
 	for i := 0; i < size; i++ {
 		d := make([]string, 0)
+		d = append(d, strconv.Itoa(r.Agentid[i]))
 		d = append(d, fmt.Sprintf("%v", r.Ontunetime[i]))
 		d = append(d, strconv.Itoa(r.Agenttime[i]))
-		d = append(d, strconv.Itoa(r.Agentid[i]))
 		d = append(d, strconv.Itoa(r.Cmdid[i]))
 		d = append(d, strconv.Itoa(r.Userid[i]))
 		d = append(d, strconv.Itoa(r.Usr[i]))
@@ -1312,8 +1328,8 @@ func (r *RealtimeprocArray) GetString() string {
 		d = append(d, strconv.Itoa(r.Pvbytes[i]))
 		d = append(d, strconv.Itoa(r.Pgpool[i]))
 
-		arr = append(arr, strings.Join(d, ","))
+		arr = append(arr, d)
 	}
 
-	return strings.Join(arr, ",")
+	return arr
 }

@@ -13,7 +13,7 @@ type TableGet interface {
 	GetInsertStmt(tablename string, dbtype string) string
 	GetArgs() []interface{}
 	GetArrString() []string
-	GetString() string
+	GetString() [][]string
 }
 
 type Tableinfo struct {
@@ -675,8 +675,8 @@ func (a *AgentinfoArr) GetArrString() []string {
 }
 
 type LastrealtimeperfArr struct {
-	Ontunetime    []int64
 	Agentid       []int
+	Ontunetime    []int64
 	Hostname      []string
 	User          []int
 	Sys           []int
@@ -931,14 +931,14 @@ func (l *LastrealtimeperfArr) GetArray() []Lastrealtimeperf {
 	return arr
 }
 
-func (a *LastrealtimeperfArr) GetArrString() []string {
-	arr := make([]string, 0)
+func (a *LastrealtimeperfArr) GetArrString() [][]string {
+	var arr [][]string
 	size := len(a.Agentid)
 
 	for i := 0; i < size; i++ {
 		d := make([]string, 0)
-		d = append(d, fmt.Sprintf("%v", a.Ontunetime[i]))
 		d = append(d, strconv.Itoa(a.Agentid[i]))
+		d = append(d, fmt.Sprintf("%v", a.Ontunetime[i]))
 		d = append(d, a.Hostname[i])
 		d = append(d, strconv.Itoa(a.User[i]))
 		d = append(d, strconv.Itoa(a.Sys[i]))
@@ -996,7 +996,7 @@ func (a *LastrealtimeperfArr) GetArrString() []string {
 		d = append(d, strconv.Itoa(a.Dummy29[i]))
 		d = append(d, strconv.Itoa(a.Dummy30[i]))
 
-		arr = append(arr, strings.Join(d, ","))
+		arr = append(arr, d)
 	}
 
 	return arr

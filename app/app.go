@@ -36,6 +36,11 @@ type RealData struct {
 	Data string `json:"data"`
 }
 
+type RealPerfData struct {
+	Code uint32     `json:"code"`
+	Data [][]string `json:"data"`
+}
+
 type ConsumerTime struct {
 	Perf int64
 	Pid  int64
@@ -91,7 +96,18 @@ func (c *ConsumerStruct) ConsumerInit() {
 	c.Realtimenet = make(chan *data.AgentRealTimeNet)
 }
 
-func ConvertJson(code uint32, rdata string) []byte {
+func ConvertJson(code uint32, rdata [][]string) []byte {
+	realData := RealPerfData{}
+	realData.Code = code
+	realData.Data = rdata
+
+	json_data, err := json.Marshal(realData)
+	ErrorJson(err, code)
+
+	return json_data
+}
+
+func ConvertJsonString(code uint32, rdata string) []byte {
 	realData := RealData{}
 	realData.Code = code
 	realData.Data = rdata

@@ -104,8 +104,8 @@ func GetDemoLastrealtimeperf(lrtp chan<- *data.LastrealtimeperfArr, demo DemoInf
 			} else {
 				random_agent_map[agentid] = struct{}{}
 				demo_data := &data.Lastrealtimeperf{
-					Ontunetime:    ts,
 					Agentid:       agentid,
+					Ontunetime:    ts,
 					Hostname:      fmt.Sprintf("DummyAgent%d", agentid),
 					User:          rand.Intn(100),
 					Sys:           rand.Intn(100),
