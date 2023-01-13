@@ -86,7 +86,10 @@ func main() {
 			for _, d := range db_handler {
 				if tcpRequestKeys.IsDataMapping(app.HOST_CODE) {
 					var arrdata [][]string = make([][]string, 0)
-					arrdata[0][0] = state_agent_str //데이터 통일을 위해 일단 변경..
+					var arr []string = make([]string, 0)
+					arr = append(arr, state_agent_str)
+					arrdata = append(arrdata, arr)
+					//데이터 통일을 위해 일단 변경..
 					tcpResponseData <- app.ConvertJson(app.HOST_CODE, arrdata)
 				}
 

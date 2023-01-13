@@ -103,7 +103,7 @@ func ConvertJson(code uint32, rdata [][]string) []byte {
 
 	json_data, err := json.Marshal(realData)
 	ErrorJson(err, code)
-
+	//log_write(fmt.Sprintf("%d\n", len(json_data)))
 	return json_data
 }
 
