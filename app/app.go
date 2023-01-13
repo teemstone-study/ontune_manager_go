@@ -118,6 +118,29 @@ func ConvertJsonString(code uint32, rdata string) []byte {
 	return json_data
 }
 
+func RemoveDuplicateProc(arr []data.AgentRealTimePID) []data.AgentRealTimePID {
+	arr_map := make(map[string]struct{})
+	result_arr := make([]data.AgentRealTimePID, 0)
+	for _, a := range arr {
+		for _, i := range a.PerfList {
+			flag := a.AgentID + "_" + i.Cmdname + "_" + i.Username + "_" + a.Agenttime.Format("060102030405")
+			if _, ok := arr_map[flag]; ok {
+				continue
+			} else {
+				arr_map[flag] = struct{}{}
+				single_data := data.AgentRealTimePID{}
+				single_data.PerfList = make([]data.AgentRealTimePIDInner, 0)
+				single_data.AgentID = a.AgentID
+				single_data.Agenttime = a.Agenttime
+				single_data.PerfList = append(single_data.PerfList, i)
+				result_arr = append(result_arr, single_data)
+			}
+		}
+	}
+
+	return result_arr
+}
+
 func RemoveDuplicate(arr interface{}) interface{} {
 	arr_map := make(map[string]struct{})
 

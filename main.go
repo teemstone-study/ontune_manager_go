@@ -196,6 +196,7 @@ func main() {
 
 				if len(con_pid_arr) > 0 && current_time.Pid > previous_time.Pid {
 					con_pid_arr = app.RemoveDuplicate(con_pid_arr).([]data.AgentRealTimePID)
+					con_proc_arr := app.RemoveDuplicateProc(con_pid_arr)
 
 					for idx, d := range db_handler {
 						dbtype := d.GetTabletype("realtimepid")
@@ -203,7 +204,8 @@ func main() {
 						// 초기화
 						dbdata[idx].Pid = &data.RealtimepidArray{}
 						dbdata[idx].Proc = &data.RealtimeprocArray{}
-						d.SetPidArray(&con_pid_arr, dbtype, dbdata[idx].Pid, dbdata[idx].Proc)
+						d.SetPidArray(&con_pid_arr, dbtype, dbdata[idx].Pid)
+						d.SetPidArray(&con_proc_arr, dbtype, dbdata[idx].Proc)
 
 						if TIME_DEBUG_FLAG {
 							log_write(fmt.Sprintf("realtimepid before %v %d %d\n", idx, len(con_pid_arr), time.Now().UnixMicro()))
