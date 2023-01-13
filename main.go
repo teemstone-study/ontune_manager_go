@@ -85,7 +85,9 @@ func main() {
 			// 여기에서는 변경될 Agent ID만 넘기는 형태가 됨
 			for _, d := range db_handler {
 				if tcpRequestKeys.IsDataMapping(app.HOST_CODE) {
-					tcpResponseData <- app.ConvertJsonString(app.HOST_CODE, state_agent_str)
+					var arrdata [][]string = make([][]string, 0)
+					arrdata[0][0] = state_agent_str //데이터 통일을 위해 일단 변경..
+					tcpResponseData <- app.ConvertJson(app.HOST_CODE, arrdata)
 				}
 
 				d.DemoHostStateChange(state_agent_str)
@@ -107,9 +109,9 @@ func main() {
 
 					// TCP 데이터는 1회만 넘기도록 해야 함
 					if idx == 0 && tcpRequestKeys.IsDataMapping(app.HOST_CODE) {
-						for _, a := range agentinfo_arr.GetArrString() {
-							tcpResponseData <- app.ConvertJsonString(app.HOST_CODE, a)
-						}
+						//for _, a := range agentinfo_arr.GetArrString() {
+						tcpResponseData <- app.ConvertJson(app.HOST_CODE, agentinfo_arr.GetArrString())
+						//}
 					}
 				}
 			}
