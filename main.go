@@ -330,5 +330,6 @@ func main() {
 			//fmt.Printf("main %v\n", req_keys)
 			tcpRequestKeys = *req_keys
 		}
+		time.Sleep(time.Millisecond * 1)
 	}
 }
