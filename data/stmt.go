@@ -68,8 +68,8 @@ CREATE TABLE IF NOT EXISTS public.agentinfo (
 
 var LastrealtimeperfStmt = `
 CREATE UNLOGGED TABLE public.lastrealtimeperf (			
-	_ontunetime int4 NULL,		
 	_agentid int4 NOT NULL,		
+	_ontunetime int4 NULL,		
 	_hostname text NULL,		
 	_user int4 NULL,		
 	_sys int4 NULL,		
@@ -153,12 +153,12 @@ CREATE TABLE IF NOT EXISTS public.%s (
 
 var RealtimePgPrefix = `
 CREATE TABLE IF NOT EXISTS public.%s (	
+	_agentid int4 NULL,
 	_ontunetime int4 NULL,
 `
 
 var RealtimeperfStmt = `
 _agenttime int4 NULL,
-_agentid int4 NULL,
 _user int4 NULL,
 _sys int4 NULL,
 _wait int4 NULL,
@@ -226,6 +226,7 @@ var RealtimeperfPgStmt = RealtimePgPrefix + RealtimeperfStmt
 
 var RealtimeperfTsStmt = `
 CREATE TABLE IF NOT EXISTS public.realtimeperf (	
+	_agentid int4 NULL,
 	_ontunetime timestamptz NOT NULL,
 ` + RealtimeperfStmt + `
 select create_hypertable('realtimeperf','_ontunetime', chunk_time_interval => interval '1 day');
@@ -233,7 +234,6 @@ select create_hypertable('realtimeperf','_ontunetime', chunk_time_interval => in
 
 var RealtimecpuStmt = `
 _agenttime int4 NULL,
-_agentid int4 NULL,
 _index int4 NULL,
 _user int4 NULL,
 _sys int4 NULL,
@@ -256,6 +256,7 @@ var RealtimecpuPgStmt = RealtimePgPrefix + RealtimecpuStmt
 
 var RealtimecpuTsStmt = `
 CREATE TABLE IF NOT EXISTS public.realtimecpu (	
+	_agentid int4 NULL,
 	_ontunetime timestamptz NOT NULL,
 ` + RealtimecpuStmt + `
 select create_hypertable('realtimecpu','_ontunetime', chunk_time_interval => interval '1 day');
@@ -263,7 +264,6 @@ select create_hypertable('realtimecpu','_ontunetime', chunk_time_interval => int
 
 var RealtimediskStmt = `
 _agenttime int4 NULL,
-_agentid int4 NULL,
 _ionameid int4 NULL,
 _readrate int4 NULL,
 _writerate int4 NULL,
@@ -283,6 +283,7 @@ var RealtimediskPgStmt = RealtimePgPrefix + RealtimediskStmt
 
 var RealtimediskTsStmt = `
 CREATE TABLE IF NOT EXISTS public.realtimedisk (	
+	_agentid int4 NULL,
 	_ontunetime timestamptz NOT NULL,
 ` + RealtimediskStmt + `
 select create_hypertable('realtimedisk','_ontunetime', chunk_time_interval => interval '1 day');
@@ -290,7 +291,6 @@ select create_hypertable('realtimedisk','_ontunetime', chunk_time_interval => in
 
 var RealtimenetStmt = `
 _agenttime int4 NULL,
-_agentid int4 NULL,
 _ionameid int4 NULL,
 _readrate int4 NULL,
 _writerate int4 NULL,
@@ -309,6 +309,7 @@ var RealtimenetPgStmt = RealtimePgPrefix + RealtimenetStmt
 
 var RealtimenetTsStmt = `
 CREATE TABLE IF NOT EXISTS public.realtimenet (	
+	_agentid int4 NULL,
 	_ontunetime timestamptz NOT NULL,
 ` + RealtimenetStmt + `
 select create_hypertable('realtimenet','_ontunetime', chunk_time_interval => interval '1 day');
@@ -316,7 +317,6 @@ select create_hypertable('realtimenet','_ontunetime', chunk_time_interval => int
 
 var RealtimepidStmt = `
 _agenttime int4 NULL,
-_agentid int4 NULL,
 _pid int4 NULL,
 _ppid int4 NULL,
 _uid int4 NULL,
@@ -347,6 +347,7 @@ var RealtimepidPgStmt = RealtimePgPrefix + RealtimepidStmt
 
 var RealtimepidTsStmt = `
 CREATE TABLE IF NOT EXISTS public.realtimepid (	
+	_agentid int4 NULL,
 	_ontunetime timestamptz NOT NULL,
 ` + RealtimepidStmt + `
 select create_hypertable('realtimepid','_ontunetime', chunk_time_interval => interval '1 day');
@@ -354,7 +355,6 @@ select create_hypertable('realtimepid','_ontunetime', chunk_time_interval => int
 
 var RealtimeprocStmt = `
 _agenttime int4 NULL,
-_agentid int4 NULL,
 _cmdid int4 NULL,
 _userid int4 NULL,
 _usr int4 NULL,
@@ -379,6 +379,7 @@ var RealtimeprocPgStmt = RealtimePgPrefix + RealtimeprocStmt
 
 var RealtimeprocTsStmt = `
 CREATE TABLE IF NOT EXISTS public.realtimeproc (	
+	_agentid int4 NULL,
 	_ontunetime timestamptz NOT NULL,
 ` + RealtimeprocStmt + `
 select create_hypertable('realtimeproc','_ontunetime', chunk_time_interval => interval '1 day');
@@ -455,6 +456,10 @@ UPDATE agentinfo
 
 var DeleteLastrealtimeperf = `
 DELETE FROM lastrealtimeperf where _agentid=$1
+`
+
+var DeleteLastrealtimeperfPrev = `
+DELETE FROM lastrealtimeperf where _agentid > $1;
 `
 
 var InsertSimpleTable = `

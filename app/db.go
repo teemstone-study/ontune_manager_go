@@ -475,6 +475,7 @@ func (d *DBHandler) InsertTableArray(dbtype string, tables ...data.TableGet) {
 		switch t.(type) {
 		case *data.LastrealtimeperfArray:
 			tablename = d.GetTablename("lastrealtimeperf")
+			tx.MustExec(data.DeleteLastrealtimeperfAll, d.demo.HostCount)
 		case *data.RealtimeperfArray:
 			tablename = d.GetTablename("realtimeperf")
 		case *data.RealtimecpuArray:

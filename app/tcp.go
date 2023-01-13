@@ -10,7 +10,7 @@ import (
 )
 
 func TcpProcessing(reqChan chan<- *DataKey, resChan chan []byte, apiserver ApiServer) {
-	fmt.Printf("TCP Server %s port", apiserver.Port)
+	fmt.Printf("TCP Server %s port\n", apiserver.Port)
 	ln, err := net.Listen("tcp", fmt.Sprintf(":%s", apiserver.Port))
 	if err != nil {
 		log.Println("TCP Connection Error")

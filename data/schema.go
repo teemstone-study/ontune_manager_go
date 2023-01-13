@@ -737,8 +737,8 @@ type LastrealtimeperfArr struct {
 
 func (l *LastrealtimeperfArr) SetData(data interface{}) {
 	d := data.(Lastrealtimeperf)
-	l.Ontunetime = append(l.Ontunetime, d.Ontunetime)
 	l.Agentid = append(l.Agentid, d.Agentid)
+	l.Ontunetime = append(l.Ontunetime, d.Ontunetime)
 	l.Hostname = append(l.Hostname, d.Hostname)
 	l.User = append(l.User, d.User)
 	l.Sys = append(l.Sys, d.Sys)
@@ -799,8 +799,8 @@ func (l *LastrealtimeperfArr) SetData(data interface{}) {
 
 func (l *LastrealtimeperfArr) GetArgs() []interface{} {
 	data := make([]interface{}, 0)
-	data = append(data, pq.Array(l.Ontunetime))
 	data = append(data, pq.Array(l.Agentid))
+	data = append(data, pq.Array(l.Ontunetime))
 	data = append(data, pq.StringArray(l.Hostname))
 	data = append(data, pq.Array(l.User))
 	data = append(data, pq.Array(l.Sys))
@@ -867,8 +867,8 @@ func (l *LastrealtimeperfArr) GetArray() []Lastrealtimeperf {
 
 	for i := 0; i < size; i++ {
 		arr = append(arr, Lastrealtimeperf{
-			Ontunetime:    l.Ontunetime[i],
 			Agentid:       l.Agentid[i],
+			Ontunetime:    l.Ontunetime[i],
 			Hostname:      l.Hostname[i],
 			User:          l.User[i],
 			Sys:           l.Sys[i],
