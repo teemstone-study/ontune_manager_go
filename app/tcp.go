@@ -43,7 +43,7 @@ func TcpProcessing(reqChan chan<- *DataKey, resChan chan []byte, apiserver ApiSe
 						log.Printf("JSON Error")
 						continue
 					}
-					fmt.Printf("recv %v\n", req_recv_data)
+					//fmt.Printf("recv %v\n", req_recv_data)
 					reqChan <- &req_recv_data
 				}
 			}
