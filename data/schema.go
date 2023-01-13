@@ -3,7 +3,6 @@ package data
 import (
 	"fmt"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/lib/pq"
@@ -611,8 +610,9 @@ func (a *AgentinfoArr) GetArgs() []interface{} {
 	return data
 }
 
-func (a *AgentinfoArr) GetArrString() []string {
-	arr := make([]string, 0)
+func (a *AgentinfoArr) GetArrString() [][]string {
+	//arr := make([]string, 0)
+	var arr [][]string
 	size := len(a.Agentid)
 
 	for i := 0; i < size; i++ {
@@ -668,9 +668,8 @@ func (a *AgentinfoArr) GetArrString() []string {
 		d = append(d, strconv.Itoa(a.Numanodecount[i]))
 		d = append(d, fmt.Sprintf("%v", a.Btime[i]))
 
-		arr = append(arr, strings.Join(d, ","))
+		arr = append(arr, d)
 	}
-
 	return arr
 }
 
