@@ -60,6 +60,8 @@ func TcpProcessing(reqChan chan<- *DataKey, resChan chan []byte, apiserver ApiSe
 					log.Println(err)
 					return
 				}
+
+				log_write(fmt.Sprintf("LASTPERFCODE %d\n", len(msg)))
 				_, err = c.Write(msg)
 				if err != nil {
 					log.Println(err)

@@ -98,7 +98,6 @@ func main() {
 		case lrtp := <-ch.Lastrealtimeperf:
 			if tcpRequestKeys.IsDataMapping(app.LASTPERF_CODE) {
 				//for _, l := range lrtp.GetArrString() {
-				log_write(fmt.Sprintf("LASTPERFCODE %d\n", len(lrtp.GetArrString())))
 				tcpResponseData <- app.ConvertJson(app.LASTPERF_CODE, lrtp.GetArrString())
 				//}
 			}
