@@ -135,7 +135,7 @@ func main() {
 				// }
 
 				// db_handler[0].SetPerf(csperf, "pg", &ltp_data, &perf_data, &cpu_data)
-				if len(con_perf_arr) > 0 && current_time.Perf > previous_time.Perf {
+				if len(con_perf_arr) > 0 && current_time.Perf > previous_time.Perf+1 {
 					con_perf_arr = app.RemoveDuplicate(con_perf_arr).([]data.AgentRealTimePerf)
 
 					for idx, d := range db_handler {
@@ -199,7 +199,7 @@ func main() {
 				// 	d.SetPidArray(&con_pid_arr, dbtype, dbdata[idx].Pid, dbdata[idx].Proc)
 				// }
 
-				if len(con_pid_arr) > 0 && current_time.Pid > previous_time.Pid {
+				if len(con_pid_arr) > 0 && current_time.Pid > previous_time.Pid+1 {
 					con_pid_arr = app.RemoveDuplicate(con_pid_arr).([]data.AgentRealTimePID)
 					con_proc_arr := app.RemoveDuplicateProc(con_pid_arr)
 
@@ -243,7 +243,7 @@ func main() {
 				// 	d.SetDiskArray(&con_disk_arr, dbtype, dbdata[idx].Disk)
 				// }
 
-				if len(con_disk_arr) > 0 && current_time.Disk > previous_time.Disk {
+				if len(con_disk_arr) > 0 && current_time.Disk > previous_time.Disk+1 {
 					con_disk_arr = app.RemoveDuplicate(con_disk_arr).([]data.AgentRealTimeDisk)
 
 					for idx, d := range db_handler {
@@ -295,7 +295,7 @@ func main() {
 				// 	d.SetNetArray(&con_net_arr, dbtype, dbdata[idx].Net)
 				// }
 
-				if len(con_net_arr) > 0 && current_time.Net > previous_time.Net {
+				if len(con_net_arr) > 0 && current_time.Net > previous_time.Net+1 {
 					con_net_arr = app.RemoveDuplicate(con_net_arr).([]data.AgentRealTimeNet)
 
 					for idx, d := range db_handler {
