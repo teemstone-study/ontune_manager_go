@@ -146,7 +146,7 @@ func main() {
 						dbdata[idx].Perf = &data.RealtimeperfArray{}
 						dbdata[idx].Cpu = &data.RealtimecpuArray{}
 						d.SetPerfArray(&con_perf_arr, dbtype, dbdata[idx].Last, dbdata[idx].Perf, dbdata[idx].Cpu)
-						fmt.Printf("%v\n", dbdata[idx].Last)
+
 						if TIME_DEBUG_FLAG {
 							log_write(fmt.Sprintf("realtimeperf before %v %d %d\n", idx, len(con_perf_arr), time.Now().UnixMicro()))
 						}
