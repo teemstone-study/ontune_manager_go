@@ -11,7 +11,7 @@ import (
 
 const (
 	DEBUG_FLAG      = false
-	TIME_DEBUG_FLAG = true
+	TIME_DEBUG_FLAG = false
 )
 
 func log_write(data string) {
