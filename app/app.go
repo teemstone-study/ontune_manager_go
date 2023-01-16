@@ -1,7 +1,10 @@
 package app
 
 import (
+	"bytes"
+	"encoding/gob"
 	"encoding/json"
+	"fmt"
 	"manager/data"
 )
 
@@ -101,10 +104,33 @@ func ConvertJson(code uint32, rdata [][]string) []byte {
 	realData.Code = code
 	realData.Data = rdata
 
-	json_data, err := json.Marshal(realData)
-	ErrorJson(err, code)
+	//json.MarshalIndent()
+	//enc := json.NewEncoder(os.Stdout)
+	//err := enc.Encode(realData)
+	//json_data, err := json.Marshal(realData)
+	//ErrorJson(err, code)
+	fmt.Println(realData)
+	//fmt.Println(string(json_data))
+
+	buf := new(bytes.Buffer)
+	//err2 := binary.Write(&buf, binary.LittleEndian, realData)
+	enc := gob.NewEncoder(buf)
+	err2 := enc.Encode(realData)
+	if err2 != nil {
+		fmt.Println(err2)
+	}
 	//log_write(fmt.Sprintf("%d\n", len(json_data)))
-	return json_data
+	//var test *RealPerfData
+	//binary.Read(&buf, binary.LittleEndian, &test)
+	//fmt.Println(test)
+
+	/*dec := gob.NewDecoder(buf)
+	err3 := dec.Decode(&test)
+	if err3 != nil {
+		fmt.Println(err3)
+	}
+	fmt.Println(test)*/
+	return buf.Bytes()
 }
 
 func ConvertJsonString(code uint32, rdata string) []byte {
