@@ -151,12 +151,12 @@ func main() {
 							log_write(fmt.Sprintf("realtimeperf before %v %d %d\n", idx, len(con_perf_arr), time.Now().UnixMicro()))
 						}
 
-						if idx == 0 && tcpRequestKeys.IsDataMapping(app.LASTPERF_CODE) {
-							go func() {
+						// if idx == 0 && tcpRequestKeys.IsDataMapping(app.LASTPERF_CODE) {
+						// 	go func() {
 
-								tcpResponseData <- app.ConvertJson(app.LASTPERF_CODE, dbdata[idx].Last.GetString())
-							}()
-						}
+						// 		tcpResponseData <- app.ConvertJson(app.LASTPERF_CODE, dbdata[idx].Last.GetString())
+						// 	}()
+						// }
 						if idx == 0 && tcpRequestKeys.IsDataMapping(app.BASIC_CODE) {
 							go func() {
 								tcpResponseData <- app.ConvertJson(app.BASIC_CODE, dbdata[idx].Perf.GetString())
