@@ -17,4 +17,4 @@ demo:
   host_count: 4000
   host_change_count: 500
   bpt_count: 300
-  interval: 1
+  interval: 2

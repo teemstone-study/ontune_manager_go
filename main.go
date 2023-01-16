@@ -83,8 +83,6 @@ func main() {
 		case state_agent_str := <-ch.ChangeStateAgentStr:
 			// 이 부분 TCP 데이터는 일단 넘기도록 하나, 아래의 Host 정보와 넘기는 형식은 다름
 			// 여기에서는 변경될 Agent ID만 넘기는 형태가 됨
-			time.Sleep(time.Second * 2)
-
 			for _, d := range db_handler {
 				if tcpRequestKeys.IsDataMapping(app.HOST_CODE) {
 					var arrdata [][]string = make([][]string, 0)
@@ -98,7 +96,6 @@ func main() {
 				d.DemoHostStateChange(state_agent_str)
 			}
 		case lrtp := <-ch.Lastrealtimeperf:
-			time.Sleep(time.Second * 2)
 			if tcpRequestKeys.IsDataMapping(app.LASTPERF_CODE) {
 				//for _, l := range lrtp.GetArrString() {
 				tcpResponseData <- app.ConvertJson(app.LASTPERF_CODE, lrtp.GetArrString())
@@ -108,7 +105,6 @@ func main() {
 				d.DemoBptUpdate(lrtp)
 			}
 		case cshost := <-ch.ConsumerData.Host:
-			time.Sleep(time.Second * 2)
 			if cshost.AgentID != "" {
 				for idx, d := range db_handler {
 					agentinfo_arr := data.AgentinfoArr{}
@@ -150,7 +146,7 @@ func main() {
 						dbdata[idx].Perf = &data.RealtimeperfArray{}
 						dbdata[idx].Cpu = &data.RealtimecpuArray{}
 						d.SetPerfArray(&con_perf_arr, dbtype, dbdata[idx].Last, dbdata[idx].Perf, dbdata[idx].Cpu)
-
+						fmt.Printf("%v\n", dbdata[idx].Last)
 						if TIME_DEBUG_FLAG {
 							log_write(fmt.Sprintf("realtimeperf before %v %d %d\n", idx, len(con_perf_arr), time.Now().UnixMicro()))
 						}
