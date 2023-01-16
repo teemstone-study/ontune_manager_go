@@ -1,13 +1,13 @@
 database:
-  - name: tsdb-hypertable
-    host: 192.168.0.188
+  - name: pg-hour
+    host: 192.168.0.187
     port: 15432
     dbname: ontune
     username: ontune
     password: ontune
 
 kafka:
-  host: 192.168.0.188
+  host: 192.168.0.187
   port: 9093
 
 apiserver:
@@ -16,5 +16,5 @@ apiserver:
 demo:
   host_count: 4000
   host_change_count: 500
-  bpt_count: 500
-  interval: 1
+  bpt_count: 300
+  interval: 2

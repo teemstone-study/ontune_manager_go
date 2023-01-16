@@ -1,6 +1,7 @@
 package app
 
 import (
+	"bytes"
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
@@ -44,7 +45,6 @@ func TcpProcessing(reqChan chan<- *DataKey, resChan chan []byte, apiserver ApiSe
 						log.Printf("JSON Error")
 						continue
 					}
-					//fmt.Printf("recv %v\n", req_recv_data)
 					reqChan <- &req_recv_data
 				}
 			}
@@ -61,10 +61,8 @@ func TcpProcessing(reqChan chan<- *DataKey, resChan chan []byte, apiserver ApiSe
 					log.Println(err)
 					return
 				}
-
-				strtest := fmt.Sprintf("%s", msg)
-				fmt.Println(strtest)
-				_, err = c.Write(msg)
+				nn, err := c.Write(msg)
+				log_write(fmt.Sprintf("LASTPERFCODE %d %d %s %s ", len(msg), nn, bytes.NewBuffer(msg[:20]).String(), bytes.NewBuffer(msg[len(msg)-20:])))
 				if err != nil {
 					log.Println(err)
 					return

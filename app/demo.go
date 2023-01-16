@@ -72,7 +72,7 @@ func GetDemoAgentinfo(arr chan<- *data.AgentinfoArr, hostcount int) {
 }
 
 func GetDemoChangeStateAgent(agent_str chan<- string, demo DemoInfo) {
-	ticker := time.NewTicker(time.Second * 1)
+	ticker := time.NewTicker(time.Second * time.Duration(demo.Interval))
 	for range ticker.C {
 		random_agent_map := make(map[int]struct{})
 		random_agent_str := make([]string, 0)
@@ -86,12 +86,11 @@ func GetDemoChangeStateAgent(agent_str chan<- string, demo DemoInfo) {
 			}
 		}
 		agent_str <- strings.Join(random_agent_str, ",")
-		time.Sleep(time.Second * time.Duration(demo.Interval))
 	}
 }
 
 func GetDemoLastrealtimeperf(lrtp chan<- *data.LastrealtimeperfArr, demo DemoInfo) {
-	ticker := time.NewTicker(time.Second * 1)
+	ticker := time.NewTicker(time.Second * time.Duration(demo.Interval))
 	for range ticker.C {
 		random_agent_map := make(map[int]struct{})
 		ts := time.Now().Unix()
@@ -168,6 +167,5 @@ func GetDemoLastrealtimeperf(lrtp chan<- *data.LastrealtimeperfArr, demo DemoInf
 		}
 
 		lrtp <- &lastrealtimeperf_arr
-		time.Sleep(time.Second * time.Duration(demo.Interval))
 	}
 }
