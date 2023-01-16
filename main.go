@@ -83,6 +83,8 @@ func main() {
 		case state_agent_str := <-ch.ChangeStateAgentStr:
 			// 이 부분 TCP 데이터는 일단 넘기도록 하나, 아래의 Host 정보와 넘기는 형식은 다름
 			// 여기에서는 변경될 Agent ID만 넘기는 형태가 됨
+			time.Sleep(time.Second * 2)
+
 			for _, d := range db_handler {
 				if tcpRequestKeys.IsDataMapping(app.HOST_CODE) {
 					var arrdata [][]string = make([][]string, 0)
@@ -96,6 +98,7 @@ func main() {
 				d.DemoHostStateChange(state_agent_str)
 			}
 		case lrtp := <-ch.Lastrealtimeperf:
+			time.Sleep(time.Second * 2)
 			if tcpRequestKeys.IsDataMapping(app.LASTPERF_CODE) {
 				//for _, l := range lrtp.GetArrString() {
 				tcpResponseData <- app.ConvertJson(app.LASTPERF_CODE, lrtp.GetArrString())
@@ -105,6 +108,7 @@ func main() {
 				d.DemoBptUpdate(lrtp)
 			}
 		case cshost := <-ch.ConsumerData.Host:
+			time.Sleep(time.Second * 2)
 			if cshost.AgentID != "" {
 				for idx, d := range db_handler {
 					agentinfo_arr := data.AgentinfoArr{}
@@ -135,7 +139,7 @@ func main() {
 				// }
 
 				// db_handler[0].SetPerf(csperf, "pg", &ltp_data, &perf_data, &cpu_data)
-				if len(con_perf_arr) > 0 && current_time.Perf > previous_time.Perf+1 {
+				if len(con_perf_arr) > 0 && current_time.Perf > previous_time.Perf {
 					con_perf_arr = app.RemoveDuplicate(con_perf_arr).([]data.AgentRealTimePerf)
 
 					for idx, d := range db_handler {
@@ -199,7 +203,7 @@ func main() {
 				// 	d.SetPidArray(&con_pid_arr, dbtype, dbdata[idx].Pid, dbdata[idx].Proc)
 				// }
 
-				if len(con_pid_arr) > 0 && current_time.Pid > previous_time.Pid+1 {
+				if len(con_pid_arr) > 0 && current_time.Pid > previous_time.Pid {
 					con_pid_arr = app.RemoveDuplicate(con_pid_arr).([]data.AgentRealTimePID)
 					con_proc_arr := app.RemoveDuplicateProc(con_pid_arr)
 
@@ -243,7 +247,7 @@ func main() {
 				// 	d.SetDiskArray(&con_disk_arr, dbtype, dbdata[idx].Disk)
 				// }
 
-				if len(con_disk_arr) > 0 && current_time.Disk > previous_time.Disk+1 {
+				if len(con_disk_arr) > 0 && current_time.Disk > previous_time.Disk {
 					con_disk_arr = app.RemoveDuplicate(con_disk_arr).([]data.AgentRealTimeDisk)
 
 					for idx, d := range db_handler {
@@ -295,7 +299,7 @@ func main() {
 				// 	d.SetNetArray(&con_net_arr, dbtype, dbdata[idx].Net)
 				// }
 
-				if len(con_net_arr) > 0 && current_time.Net > previous_time.Net+1 {
+				if len(con_net_arr) > 0 && current_time.Net > previous_time.Net {
 					con_net_arr = app.RemoveDuplicate(con_net_arr).([]data.AgentRealTimeNet)
 
 					for idx, d := range db_handler {
