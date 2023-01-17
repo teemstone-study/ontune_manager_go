@@ -2,6 +2,9 @@ package app
 
 import (
 	"bytes"
+	"time"
+
+	//"encoding/binary"
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
@@ -9,6 +12,8 @@ import (
 	"log"
 	"net"
 )
+
+var dataSucc bool
 
 func TcpProcessing(reqChan chan<- *DataKey, resChan chan []byte, apiserver ApiServer) {
 	fmt.Printf("TCP Server %s port\n", apiserver.Port)
@@ -22,6 +27,8 @@ func TcpProcessing(reqChan chan<- *DataKey, resChan chan []byte, apiserver ApiSe
 
 	for {
 		conn, err := ln.Accept()
+		fmt.Println("Client Accept!!")
+		dataSucc = true
 		if err != nil {
 			log.Println("Connection Closed")
 			continue
@@ -40,19 +47,40 @@ func TcpProcessing(reqChan chan<- *DataKey, resChan chan []byte, apiserver ApiSe
 					return
 				}
 				if 0 < n {
-					var req_recv_data DataKey
-					if err := json.Unmarshal(req_recv[:n], &req_recv_data); err != nil {
-						log.Printf("JSON Error")
+					if n == 1 && req_recv[0] == 0xFF {
+						dataSucc = true
+						fmt.Println("0xFF Join!!")
 						continue
+					} else {
+						var req_recv_data DataKey
+						if err := json.Unmarshal(req_recv[:n], &req_recv_data); err != nil {
+							log.Printf("JSON Error")
+							continue
+						}
+						reqChan <- &req_recv_data
 					}
-					reqChan <- &req_recv_data
 				}
 			}
 		}(conn)
 
 		go func(c net.Conn) {
+			var last_Sendtime int64
 			for {
 				msg := <-resChan
+				for {
+					if dataSucc {
+						break
+					} else {
+						if last_Sendtime+int64(30) <= time.Now().Unix() {
+							c.Close()
+							fmt.Println("Conntion Close!!")
+							return
+						}
+					}
+					time.Sleep(time.Millisecond * 1)
+				}
+				last_Sendtime = time.Now().Unix()
+				dataSucc = false
 				msglen := make([]byte, 4)
 				binary.LittleEndian.PutUint32(msglen, uint32(len(msg)))
 
