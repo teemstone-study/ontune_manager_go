@@ -1,7 +1,6 @@
 package app
 
 import (
-	"bytes"
 	"time"
 
 	//"encoding/binary"
@@ -42,6 +41,7 @@ func TcpProcessing(reqChan chan<- *DataKey, resChan chan []byte, apiserver ApiSe
 					if io.EOF == err {
 						return
 					}
+					dataSucc = true
 					log.Printf("Failed Connection: %v\n", err)
 					reqChan <- &DataKey{DATAKEY_CODE, 0}
 					return
@@ -65,8 +65,9 @@ func TcpProcessing(reqChan chan<- *DataKey, resChan chan []byte, apiserver ApiSe
 
 		go func(c net.Conn) {
 			var last_Sendtime int64
+			last_Sendtime = time.Now().Unix()
 			for {
-				msg := <-resChan
+
 				for {
 					if dataSucc {
 						break
@@ -79,6 +80,7 @@ func TcpProcessing(reqChan chan<- *DataKey, resChan chan []byte, apiserver ApiSe
 					}
 					time.Sleep(time.Millisecond * 1)
 				}
+				msg := <-resChan
 				last_Sendtime = time.Now().Unix()
 				dataSucc = false
 				msglen := make([]byte, 4)
@@ -89,12 +91,13 @@ func TcpProcessing(reqChan chan<- *DataKey, resChan chan []byte, apiserver ApiSe
 					log.Println(err)
 					return
 				}
-				nn, err := c.Write(msg)
-				log_write(fmt.Sprintf("LASTPERFCODE %d %d %s %s ", len(msg), nn, bytes.NewBuffer(msg[:20]).String(), bytes.NewBuffer(msg[len(msg)-20:])))
+				_, err = c.Write(msg)
+				//log_write(fmt.Sprintf("LASTPERFCODE %d %d %s %s ", len(msg), nn, bytes.NewBuffer(msg[:20]).String(), bytes.NewBuffer(msg[len(msg)-20:])))
 				if err != nil {
 					log.Println(err)
 					return
 				}
+
 			}
 		}(conn)
 	}
