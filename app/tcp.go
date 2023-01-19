@@ -49,7 +49,7 @@ func TcpProcessing(reqChan chan<- *DataKey, resChan chan []byte, apiserver ApiSe
 				if 0 < n {
 					if n == 1 && req_recv[0] == 0xFF {
 						dataSucc = true
-						fmt.Println("0xFF Join!!")
+						//fmt.Println("0xFF Join!!")
 						continue
 					} else {
 						var req_recv_data DataKey
