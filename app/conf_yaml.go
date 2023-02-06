@@ -41,7 +41,7 @@ type Config struct {
 
 func (d DbInfo) Datasource() string {
 	return fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable TimeZone=Asia/Seoul",
-		d.Host, d.Port, d.Dbname, d.Username, d.Password)
+		d.Host, d.Port, d.Username, d.Password, d.Dbname)
 }
 
 func GetConfig(filename string) Config {
